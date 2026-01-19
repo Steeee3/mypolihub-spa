@@ -1,0 +1,125 @@
+.course-group {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.course-group-head {
+    padding: 16px 16px 12px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    border-bottom: 1px solid rgba(0, 40, 90, 0.10);
+}
+
+@media (prefers-color-scheme: dark) {
+    .course-group-head {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+    }
+}
+
+.course-group-title {
+    font-size: 15px;
+    font-weight: 860;
+    letter-spacing: .2px;
+}
+
+.course-group-sub {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    max-width: 70ch;
+}
+
+.exam-item {
+    grid-template-columns: 1fr auto auto;
+    grid-auto-rows: auto;
+}
+
+.exam-subline {
+    grid-column: 1 / -1;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 12.5px;
+}
+
+.card-body .grid {
+    grid-template-columns: 1fr !important;
+}
+
+@media (min-width:860px) {
+    .card-body .grid {
+        grid-template-columns: 1.1fr .9fr !important;
+    }
+}
+
+.card.mini {
+    min-width: 0;
+}
+
+.card.mini .details-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    align-items: start;
+}
+
+@media (min-width:520px) {
+    .card.mini .details-row {
+        grid-template-columns: 120px 1fr;
+        gap: 10px 14px;
+    }
+}
+
+.card.mini .details-label {
+    white-space: nowrap;
+}
+
+.card.mini .details-value {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.majors-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.majors-list .badge {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.15;
+}
+
+@media (max-width:520px) {
+    .card.mini h3 {
+        font-size: 13.5px;
+    }
+
+    .card.mini {
+        padding: 12px 12px;
+    }
+}
+
+.header-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+@media (min-width:520px) {
+    .card.mini .details-value {
+        justify-self: end;
+        text-align: right;
+    }
+
+    .card.mini .details-value .majors-list {
+        justify-content: flex-end;
+    }
+}

@@ -1,0 +1,367 @@
+:root {
+    --bg: #eef3fb;
+    --card: rgba(255, 255, 255, 0.78);
+    --card-solid: #ffffff;
+    --text: #0f172a;
+    --muted: rgba(15, 23, 42, 0.65);
+    --line: rgba(15, 23, 42, 0.12);
+    --soft: rgba(15, 23, 42, 0.06);
+    --shadow: 0 20px 60px rgba(2, 6, 23, 0.12);
+    --shadow-soft: 0 10px 30px rgba(2, 6, 23, 0.10);
+    --accent: #0b5ed7;
+    --accent2: #6d28d9;
+    --danger: #dc2626;
+    --ok: #16a34a;
+    --ring: rgba(11, 94, 215, 0.20);
+    --focus-border: rgba(11, 94, 215, 0.48);
+    --focus-shadow: 0 0 0 3px rgba(11, 94, 215, 0.16);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #0b1220;
+        --card: rgba(17, 24, 39, 0.72);
+        --card-solid: #0f172a;
+        --text: #e5e7eb;
+        --muted: rgba(229, 231, 235, 0.68);
+        --line: rgba(229, 231, 235, 0.14);
+        --soft: rgba(229, 231, 235, 0.08);
+        --shadow: 0 22px 70px rgba(0, 0, 0, 0.40);
+        --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.26);
+        --ring: rgba(96, 165, 250, 0.18);
+        --focus-border: rgba(96, 165, 250, 0.55);
+        --focus-shadow: 0 0 0 3px rgba(96, 165, 250, 0.18);
+    }
+}
+
+.login-page {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--text);
+    background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(11, 94, 215, 0.18), transparent 60%),
+        radial-gradient(1000px 700px at 80% 20%, rgba(109, 40, 217, 0.14), transparent 55%),
+        linear-gradient(180deg, var(--bg), var(--bg));
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+.login-bg {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.bg-orb {
+    position: absolute;
+    width: 520px;
+    height: 520px;
+    border-radius: 999px;
+    filter: blur(36px);
+    opacity: 0.65;
+    transform: translateZ(0);
+    animation: floaty 9s ease-in-out infinite;
+}
+
+.orb-1 {
+    left: -180px;
+    top: -160px;
+    background: radial-gradient(circle at 30% 30%, rgba(11, 94, 215, 0.55), transparent 65%);
+}
+
+.orb-2 {
+    right: -220px;
+    top: 120px;
+    background: radial-gradient(circle at 40% 40%, rgba(109, 40, 217, 0.48), transparent 62%);
+    animation-duration: 11s;
+    animation-delay: -2.5s;
+}
+
+.bg-grid {
+    position: absolute;
+    inset: 0;
+    opacity: 0.14;
+    background-image:
+        linear-gradient(to right, var(--line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: radial-gradient(closest-side, rgba(0, 0, 0, 0.9), transparent 85%);
+}
+
+@keyframes floaty {
+
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    50% {
+        transform: translate3d(0, 18px, 0) scale(1.02);
+    }
+}
+
+.login-shell {
+    width: min(980px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 28px 0 44px;
+}
+
+.login-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 16px 18px;
+    border-radius: 18px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(12px);
+    animation: popIn 380ms ease-out both;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    font-weight: 900;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), #043b8a);
+    box-shadow: 0 10px 26px rgba(11, 94, 215, 0.22);
+}
+
+.title h1 {
+    margin: 0;
+    font-size: 18px;
+    letter-spacing: 0.2px;
+}
+
+.title span {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+.login-card {
+    width: min(560px, 100%);
+    margin: 22px auto 0;
+    border-radius: 22px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(14px);
+    overflow: hidden;
+    animation: popIn 420ms ease-out both;
+    animation-delay: 60ms;
+}
+
+@keyframes popIn {
+    from {
+        transform: translateY(10px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.login-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 18px 14px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.30), transparent);
+    border-bottom: 1px solid var(--line);
+}
+
+.head-left h2 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.head-left p {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.alert {
+    margin: 14px 18px 0;
+    padding: 12px 12px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.55);
+    color: var(--text);
+    font-weight: 700;
+    font-size: 13px;
+}
+
+@media (prefers-color-scheme: dark) {
+    .alert {
+        background: rgba(15, 23, 42, 0.55);
+    }
+}
+
+.alert-danger {
+    border-color: rgba(220, 38, 38, 0.28);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.10);
+}
+
+.alert-ok {
+    border-color: rgba(22, 163, 74, 0.28);
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.10);
+}
+
+.login-form {
+    padding: 18px;
+    display: grid;
+    gap: 14px;
+}
+
+.field {
+    display: grid;
+    gap: 8px;
+}
+
+.field-label {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.field-control {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    align-items: center;
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    background: var(--card-solid);
+    box-shadow: 0 8px 22px rgba(2, 6, 23, 0.08);
+    overflow: hidden;
+    transition: box-shadow 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+@media (prefers-color-scheme: dark) {
+    .field-control {
+        background: rgba(2, 6, 23, 0.28);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.26);
+    }
+}
+
+.field-ico {
+    display: grid;
+    place-items: center;
+    height: 46px;
+    color: var(--muted);
+    font-weight: 900;
+    user-select: none;
+    background: linear-gradient(180deg, var(--soft), transparent);
+    border-right: 1px solid var(--line);
+}
+
+.field-control input {
+    height: 46px;
+    padding: 0 14px;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.field-control input::placeholder {
+    color: rgba(15, 23, 42, 0.45);
+}
+
+@media (prefers-color-scheme: dark) {
+    .field-control input::placeholder {
+        color: rgba(229, 231, 235, 0.42);
+    }
+}
+
+.field-control:focus-within {
+    border-color: var(--focus-border);
+    box-shadow: var(--focus-shadow), 0 12px 26px rgba(2, 6, 23, 0.10);
+    transform: translateY(-1px);
+}
+
+.login-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 2px;
+}
+
+.btn-login {
+    position: relative;
+    padding: 12px 16px;
+    border-radius: 14px;
+    font-weight: 900;
+    overflow: hidden;
+    transform: translateZ(0);
+}
+
+.btn-shine {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 0%, rgba(255, 255, 255, 0.36) 25%, transparent 55%);
+    transform: translateX(-120%);
+    transition: transform 600ms ease;
+    pointer-events: none;
+}
+
+.btn-login:hover .btn-shine {
+    transform: translateX(120%);
+}
+
+.btn-login:active {
+    transform: translateY(1px);
+}
+
+.login-foot {
+    padding: 12px 18px 18px;
+    border-top: 1px solid var(--line);
+    background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.22));
+}
+
+@media (prefers-color-scheme: dark) {
+    .login-foot {
+        background: linear-gradient(180deg, transparent, rgba(2, 6, 23, 0.22));
+    }
+}
+
+.hint {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+}
+
+.btn.btn-danger {
+    background: var(--danger);
+    border: 1px solid rgba(220, 38, 38, 0.55);
+    color: #fff;
+}
+
+.btn.btn-danger:hover {
+    filter: brightness(0.97);
+}
+
+.btn.btn-danger:active {
+    transform: translateY(1px);
+}
+
+.btn.btn-danger:focus,
+.btn.btn-danger:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.20);
+}

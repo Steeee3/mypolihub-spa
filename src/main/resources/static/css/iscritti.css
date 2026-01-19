@@ -1,0 +1,492 @@
+.table-wrap {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: auto;
+    max-height: 62vh;
+    /* scroll interno (header tabella sticky) */
+    box-shadow: var(--shadow);
+}
+
+/* Tabella */
+.table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 900px;
+    /* evita comprimere troppo: scroll orizzontale se serve */
+}
+
+.table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: blur(10px);
+
+    border-bottom: 1px solid rgba(0, 40, 90, 0.10);
+    padding: 12px 12px;
+    text-align: left;
+
+    font-size: 12px;
+    font-weight: 820;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+@media (prefers-color-scheme: dark) {
+    .table thead th {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+    }
+}
+
+/* Link header (sorting server-side) */
+.th-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: inherit;
+    text-decoration: none;
+    user-select: none;
+}
+
+.table thead th:hover {
+    color: var(--text);
+}
+
+.table thead th.is-active {
+    color: var(--text);
+}
+
+/* Iconcina sort */
+.sort-ico {
+    width: 16px;
+    height: 16px;
+    border-radius: 8px;
+
+    position: relative;
+}
+
+.sort-ico::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 6px;
+    height: 6px;
+    border-right: 2px solid color-mix(in srgb, var(--text) 70%, transparent);
+    border-bottom: 2px solid color-mix(in srgb, var(--text) 70%, transparent);
+    transform: rotate(45deg);
+    top: 4px;
+    /* default: freccia giù */
+}
+
+.sort-ico.asc::before {
+    transform: rotate(-135deg);
+    /* freccia su */
+    top: 6px;
+}
+
+.sort-ico.desc::before {
+    transform: rotate(45deg);
+    /* freccia giù */
+    top: 4px;
+}
+
+/* Celle */
+.table tbody td {
+    padding: 12px 12px;
+    border-bottom: 1px solid rgba(0, 40, 90, 0.08);
+    font-size: 13px;
+    color: var(--text);
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+@media (prefers-color-scheme: dark) {
+    .table tbody td {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+}
+
+.table tbody tr:hover td {
+    background: color-mix(in srgb, var(--chip-bg) 55%, transparent);
+}
+
+/* Colonne "numeriche" o email: meglio tabular */
+.mono {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Tag Result/Status */
+.tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--chip-border);
+    background: var(--chip-bg);
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.tag.is-empty {
+    opacity: .75;
+}
+
+/* Colonna azioni allineata a destra */
+.th-actions,
+.actions-cell {
+    text-align: right;
+}
+
+/* Bottone più compatto */
+.btn-sm {
+    padding: 9px 12px;
+    border-radius: 14px;
+    font-size: 12.5px;
+}
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+.btn-ghost:hover {
+    background: color-mix(in srgb, var(--chip-bg) 55%, transparent);
+}
+
+/* Riga form sotto la riga */
+.edit-row td {
+    padding: 0;
+    border-bottom: 1px solid rgba(0, 40, 90, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+    .edit-row td {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+}
+
+.edit-panel {
+    border-top: 1px solid rgba(0, 40, 90, 0.10);
+    background: color-mix(in srgb, var(--surface) 92%, var(--surface-2));
+    padding: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+    .edit-panel {
+        border-top: 1px solid rgba(255, 255, 255, 0.10);
+    }
+}
+
+.edit-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.edit-title {
+    font-weight: 900;
+    letter-spacing: .2px;
+}
+
+.edit-sub {
+    margin-top: 4px;
+    font-size: 12.5px;
+    color: var(--muted);
+}
+
+.edit-form .grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.field {
+    display: grid;
+    gap: 6px;
+}
+
+.field-wide {
+    grid-column: 1 / -1;
+}
+
+.label {
+    font-size: 12px;
+    font-weight: 850;
+    color: var(--muted);
+}
+
+.field input,
+.field select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+}
+
+.field input:disabled {
+    opacity: 0.85;
+    background: color-mix(in srgb, var(--surface) 85%, var(--surface-2));
+}
+
+.field select:focus,
+.field input:focus {
+    border-color: color-mix(in srgb, var(--text) 35%, var(--border));
+}
+
+.hint {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.field .value {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface) 85%, var(--surface-2));
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.25;
+    opacity: .92;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.field .value.mono {
+    font-variant-numeric: tabular-nums;
+}
+
+.field .value.wrap {
+    white-space: normal;
+}
+
+.table td.major-cell {
+    max-width: 260px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.exam-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.exam-actions form {
+    margin: 0;
+}
+
+@media (max-width: 720px) {
+    .header-actions {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+    }
+
+    .exam-actions {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+}
+
+.inline-form {
+    margin: 0;
+}
+
+/* Bottoni “importanti” ma coerenti col tuo stile */
+.btn-bulk {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-weight: 900;
+    letter-spacing: .2px;
+    white-space: nowrap;
+}
+
+/* Dot coerente (no quadretto “strano”) */
+.btn-bulk::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: currentColor;
+    opacity: .9;
+}
+
+/* PUBBLICA: su btn-accent il dot deve essere chiaro (altrimenti diventa “spento”) */
+.btn-publish::before {
+    background: rgba(255, 255, 255, .9);
+}
+
+/* VERBALIZZA: ghost con accento verde, pulito e leggibile */
+.btn-finalize {
+    border-color: color-mix(in srgb, #22c55e 55%, var(--border));
+    color: color-mix(in srgb, #22c55e 80%, var(--text));
+}
+
+.btn-finalize:hover {
+    background: color-mix(in srgb, #22c55e 12%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+    .btn-finalize {
+        border-color: color-mix(in srgb, #22c55e 45%, var(--border));
+        color: color-mix(in srgb, #22c55e 75%, var(--text));
+    }
+
+    .btn-finalize:hover {
+        background: color-mix(in srgb, #22c55e 16%, transparent);
+    }
+}
+
+/* -------------------------
+   STATUS COLORS
+   values: non inserito, inserito, pubblicato, rifiutato, verbalizzato
+-------------------------- */
+
+.tag-status[data-status="non inserito"] {
+    background: rgba(148, 163, 184, 0.18);
+    border-color: rgba(148, 163, 184, 0.35);
+    color: rgba(148, 163, 184, 1);
+}
+
+.tag-status[data-status="inserito"] {
+    background: rgba(245, 158, 11, 0.18);
+    border-color: rgba(245, 158, 11, 0.35);
+    color: rgba(245, 158, 11, 1);
+}
+
+.tag-status[data-status="pubblicato"] {
+    background: rgba(34, 197, 94, 0.16);
+    border-color: rgba(34, 197, 94, 0.35);
+    color: rgba(34, 197, 94, 1);
+}
+
+.tag-status[data-status="rifiutato"] {
+    background: rgba(239, 68, 68, 0.16);
+    border-color: rgba(239, 68, 68, 0.35);
+    color: rgba(239, 68, 68, 1);
+}
+
+.tag-status[data-status="verbalizzato"] {
+    background: rgba(59, 130, 246, 0.16);
+    border-color: rgba(59, 130, 246, 0.35);
+    color: rgba(59, 130, 246, 1);
+}
+
+.tag-status {
+    background: rgba(148, 163, 184, 0.12);
+    border-color: rgba(148, 163, 184, 0.25);
+    color: rgba(148, 163, 184, 0.95);
+}
+
+/* -------------------------
+   RESULT COLORS
+   order: vuoto, assente, rimandato, riprovato, 18..30, 30 e lode
+-------------------------- */
+
+/* vuoto */
+.tag-result.is-empty,
+.tag-result[data-result=""] {
+    background: rgba(148, 163, 184, 0.14);
+    border-color: rgba(148, 163, 184, 0.28);
+    color: rgba(148, 163, 184, 1);
+}
+
+/* assente */
+.tag-result[data-result="assente"] {
+    background: rgba(100, 116, 139, 0.18);
+    border-color: rgba(100, 116, 139, 0.35);
+    color: rgba(100, 116, 139, 1);
+}
+
+/* riprovato */
+.tag-result[data-result="riprovato"] {
+    background: rgba(239, 68, 68, 0.16);
+    border-color: rgba(239, 68, 68, 0.35);
+    color: rgba(239, 68, 68, 1);
+}
+
+/* rimandato */
+.tag-result[data-result="rimandato"] {
+    background: rgba(245, 158, 11, 0.18);
+    border-color: rgba(245, 158, 11, 0.35);
+    color: rgba(245, 158, 11, 1);
+}
+
+/* 30 e lode (gestisco anche varianti comuni) */
+.tag-result[data-result="30 e lode"],
+.tag-result[data-result="30 e lode "],
+.tag-result[data-result="30l"],
+.tag-result[data-result="30lode"],
+.tag-result[data-result="30 e lode."] {
+    background: rgba(168, 85, 247, 0.16);
+    border-color: rgba(168, 85, 247, 0.35);
+    color: rgba(168, 85, 247, 1);
+}
+
+/* numerici (18..30): blu -> verde, semplice e leggibile */
+.tag-result[data-result="18"],
+.tag-result[data-result="19"],
+.tag-result[data-result="20"],
+.tag-result[data-result="21"],
+.tag-result[data-result="22"] {
+    background: rgba(59, 130, 246, 0.14);
+    border-color: rgba(59, 130, 246, 0.30);
+    color: rgba(59, 130, 246, 1);
+}
+
+.tag-result[data-result="23"],
+.tag-result[data-result="24"],
+.tag-result[data-result="25"],
+.tag-result[data-result="26"],
+.tag-result[data-result="27"] {
+    background: rgba(16, 185, 129, 0.14);
+    border-color: rgba(16, 185, 129, 0.30);
+    color: rgba(16, 185, 129, 1);
+}
+
+.tag-result[data-result="28"],
+.tag-result[data-result="29"],
+.tag-result[data-result="30"] {
+    background: rgba(34, 197, 94, 0.16);
+    border-color: rgba(34, 197, 94, 0.35);
+    color: rgba(34, 197, 94, 1);
+}
+
+/* fallback */
+.tag-result {
+    background: rgba(148, 163, 184, 0.12);
+    border-color: rgba(148, 163, 184, 0.25);
+    color: rgba(148, 163, 184, 0.95);
+}

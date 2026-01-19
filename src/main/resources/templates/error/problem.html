@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="|Errore ${status} · MyPoliHub|">Errore · MyPoliHub</title>
+
+    <link rel="stylesheet" href="/css/adminPanel.css" />
+    <link rel="stylesheet" th:href="@{/css/home.css(v=${#dates.createNow().time})}">
+    <link rel="stylesheet" th:href="@{/css/error.css(v=${#dates.createNow().time})}">
+</head>
+
+<body>
+    <div class="container home-shell">
+        <header class="topbar home-topbar">
+            <div class="brand">
+                <div class="logo">MP</div>
+                <div class="title">
+                    <h1>MyPoliHub</h1>
+                    <span th:if="${helloName != null}" th:text="|Ciao ${helloName} 👋|">Ciao 👋</span>
+                    <span th:if="${helloName == null}">Benvenuto 👋</span>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <a class="btn btn-accent" th:href="@{/home}">
+                    <span class="icon"></span> Home
+                </a>
+                <a class="btn" th:href="@{/logout}">
+                    <span class="icon"></span> Logout
+                </a>
+            </div>
+        </header>
+
+        <section class="card error-shell">
+            <div class="card-header error-hero">
+                <div>
+                    <div class="error-code" th:text="${status}">500</div>
+
+                    <div class="error-title" th:text="${title}">
+                        Si è verificato un errore
+                    </div>
+
+                    <p class="error-sub"
+                        th:text="${#strings.isEmpty(message)} ? ' ' : 'Errore: ' + ${message}">
+                        Qualcosa è andato storto.
+                    </p>
+
+                    <div class="error-meta">
+                        <div th:if="${timestamp != null}">
+                            Timestamp: <code th:text="${timestamp}">2026-01-13T...</code>
+                        </div>
+                    </div>
+                </div>
+
+                <span class="pill" th:text="|${status}|" style="align-self:flex-start;">500</span>
+            </div>
+
+            <div class="card-body">
+                <div class="error-actions">
+                    <a class="btn btn-ghost" th:href="@{/home}">Torna alla Home</a>
+                    <a class="btn" href="javascript:history.back()">Indietro</a>
+                    <a class="btn btn-danger" th:href="@{/logout}">Esci</a>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iscritti · MyPoliHub</title>
+
+    <link rel="stylesheet" href="/css/adminPanel.css" />
+    <link rel="stylesheet" th:href="@{/css/home.css(v=${#dates.createNow().time})}">
+    <link rel="stylesheet" th:href="@{/css/iscritti.css(v=${#dates.createNow().time})}">
+</head>
+
+<body>
+    <div class="container home-shell">
+        <header class="topbar home-topbar">
+            <div class="brand">
+                <div class="logo">MP</div>
+                <div class="title">
+                    <h1>MyPoliHub</h1>
+                    <span th:text="|Ciao ${helloName} 👋|">Ciao 👋</span>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <a class="btn btn-accent" th:href="@{/home}">
+                    <span class="icon orange"></span> Home
+                </a>
+                <a class="btn btn-accent" th:href="@{/professor/reports}">
+                    <span class="icon purple"></span> Verbali
+                </a>
+                <a class="btn" th:href="@{/logout}">
+                    <span class="icon"></span> Logout
+                </a>
+            </div>
+        </header>
+
+        <div class="note note-danger" th:if="${errorMessage != null and !#strings.isEmpty(errorMessage)}">
+            <strong>Errore:</strong>
+            <span th:text="${errorMessage}">Messaggio di errore…</span>
+        </div>
+
+        <section class="card" style="margin-top:18px;">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Iscritti all’appello</h2>
+                    <p class="card-sub">
+                        Clicca un header per ordinare. Click ripetuto sullo stesso header inverte l’ordine.
+                    </p>
+                </div>
+
+                <div class="header-actions">
+                    <span class="pill" th:text="|Totali: ${registrations != null ? registrations.size() : 0}|">Totali:
+                        0</span>
+
+                    <div class="exam-actions" th:if="${registrations != null and !registrations.isEmpty()}">
+                        <!-- PUBBLICA -->
+                        <form method="post" th:action="@{/professor/exam/{examId}/publish(examId=${examId})}">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                            <input type="hidden" name="sort" th:value="${sortKey}" />
+                            <input type="hidden" name="sortDir" th:value="${sortDir}" />
+
+                            <button class="btn btn-accent btn-bulk btn-publish" type="submit"
+                                title="Rende visibili agli studenti i risultati inseriti">
+                                Pubblica
+                            </button>
+                        </form>
+
+                        <!-- VERBALIZZA -->
+                        <form method="post" th:action="@{/professor/exam/{examId}/finalize(examId=${examId})}">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                            <input type="hidden" name="sort" th:value="${sortKey}" />
+                            <input type="hidden" name="sortDir" th:value="${sortDir}" />
+
+                            <button class="btn btn-ghost btn-bulk btn-finalize" type="submit"
+                                title="Verbalizza i risultati pubblicati">
+                                Verbalizza
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+
+                <div class="note" th:if="${registrations == null or registrations.isEmpty()}">
+                    Nessuno studente registrato per questo appello.
+                </div>
+
+                <div class="table-wrap" th:if="${registrations != null and !registrations.isEmpty()}">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <!-- Student ID -->
+                                <th th:with="
+                                    key='student.number',
+                                    active=${sortKey == key},
+                                    isAsc=${#strings.equalsIgnoreCase(sortDir, 'asc')},
+                                    nextDir=${active ? (isAsc ? 'desc' : 'asc') : 'asc'}
+                                " th:classappend="${active} ? ' is-active' : ''">
+                                    <a class="th-link"
+                                        th:href="@{/professor/exam(examId=${examId}, sort=${key}, sortDir=${nextDir}, editStudentNumber=${editStudentNumber})}">
+                                        Matricola
+                                        <span th:class="|sort-ico${active ? (isAsc ? ' asc' : ' desc') : ''}|"></span>
+                                    </a>
+                                </th>
+
+                                <!-- Surname -->
+                                <th th:with="
+                                    key='student.surname',
+                                    active=${sortKey == key},
+                                    isAsc=${#strings.equalsIgnoreCase(sortDir, 'asc')},
+                                    nextDir=${active ? (isAsc ? 'desc' : 'asc') : 'asc'}
+                                " th:classappend="${active} ? ' is-active' : ''">
+                                    <a class="th-link"
+                                        th:href="@{/professor/exam(examId=${examId}, sort=${key}, sortDir=${nextDir}, editStudentNumber=${editStudentNumber})}">
+                                        Cognome
+                                        <span th:class="|sort-ico${active ? (isAsc ? ' asc' : ' desc') : ''}|"></span>
+                                    </a>
+                                </th>
+
+                                <!-- Name -->
+                                <th th:with="
+                                    key='student.name',
+                                    active=${sortKey == key},
+                                    isAsc=${#strings.equalsIgnoreCase(sortDir, 'asc')},
+                                    nextDir=${active ? (isAsc ? 'desc' : 'asc') : 'asc'}
+                                " th:classappend="${active} ? ' is-active' : ''">
+                                    <a class="th-link"
+                                        th:href="@{/professor/exam(examId=${examId}, sort=${key}, sortDir=${nextDir}, editStudentNumber=${editStudentNumber})}">
+                                        Nome
+                                        <span th:class="|sort-ico${active ? (isAsc ? ' asc' : ' desc') : ''}|"></span>
+                                    </a>
+                                </th>
+
+                                <!-- Email -->
+                                <th th:with="
+                                    key='student.email',
+                                    active=${sortKey == key},
+                                    isAsc=${#strings.equalsIgnoreCase(sortDir, 'asc')},
+                                    nextDir=${active ? (isAsc ? 'desc' : 'asc') : 'asc'}
+                                " th:classappend="${active} ? ' is-active' : ''">
+                                    <a class="th-link"
+                                        th:href="@{/professor/exam(examId=${examId}, sort=${key}, sortDir=${nextDir}, editStudentNumber=${editStudentNumber})}">
+                                        Email
+                                        <span th:class="|sort-ico${active ? (isAsc ? ' asc' : ' desc') : ''}|"></span>
+                                    </a>
+                                </th>
+
+                                <!-- Major -->
+                                <th th:with="
+                                    key='student.major',
+                                    active=${sortKey == key},
+                                    isAsc=${#strings.equalsIgnoreCase(sortDir, 'asc')},
+                                    nextDir=${active ? (isAsc ? 'desc' : 'asc') : 'asc'}
+                                " th:classappend="${active} ? ' is-active' : ''">
+                                    <a class="th-link"
+                                        th:href="@{/professor/exam(examId=${examId}, sort=${key}, sortDir=${nextDir}, editStudentNumber=${editStudentNumber})}">
+                                        Corso di studi
+                                        <span th:class="|sort-ico${active ? (isAsc ? ' asc' : ' desc') : ''}|"></span>
+                                    </a>
+                                </th>
+
+                                <!-- Result -->
+                                <th th:with="
+                                    key='result',
+                                    active=${sortKey == key},
+                                    isAsc=${#strings.equalsIgnoreCase(sortDir, 'asc')},
+                                    nextDir=${active ? (isAsc ? 'desc' : 'asc') : 'asc'}
+                                " th:classappend="${active} ? ' is-active' : ''">
+                                    <a class="th-link"
+                                        th:href="@{/professor/exam(examId=${examId}, sort=${key}, sortDir=${nextDir}, editStudentNumber=${editStudentNumber})}">
+                                        Risultato
+                                        <span th:class="|sort-ico${active ? (isAsc ? ' asc' : ' desc') : ''}|"></span>
+                                    </a>
+                                </th>
+
+                                <!-- Status -->
+                                <th th:with="
+                                    key='status',
+                                    active=${sortKey == key},
+                                    isAsc=${#strings.equalsIgnoreCase(sortDir, 'asc')},
+                                    nextDir=${active ? (isAsc ? 'desc' : 'asc') : 'asc'}
+                                " th:classappend="${active} ? ' is-active' : ''">
+                                    <a class="th-link"
+                                        th:href="@{/professor/exam(examId=${examId}, sort=${key}, sortDir=${nextDir}, editStudentNumber=${editStudentNumber})}">
+                                        Status
+                                        <span th:class="|sort-ico${active ? (isAsc ? ' asc' : ' desc') : ''}|"></span>
+                                    </a>
+                                </th>
+
+                                <th class="th-actions">Azioni</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <th:block th:each="r : ${registrations}"
+                                th:with="isEditing=${editStudentNumber != null and editStudentNumber == r.student.number},
+                                    s=${#strings.toLowerCase(#strings.trim(r.status))},
+                                    canEditRow=${s == 'non inserito' or s == 'inserito'}">
+
+                                <!-- Riga normale -->
+                                <tr>
+                                    <td class="mono" th:text="${r.student.number}">000000</td>
+                                    <td th:text="${r.student.surname}">Rossi</td>
+                                    <td th:text="${r.student.name}">Mario</td>
+                                    <td class="mono" th:text="${r.student.email}">mario.rossi@...</td>
+                                    <td class="major-cell" th:text="${r.student.major != null 
+                                        ? (r.student.major.name + ' · ' + r.student.major.degreeLevel.name) 
+                                        : '—'}">
+                                        —
+                                    </td>
+
+                                    <td>
+                                        <span class="tag tag-result"
+                                            th:classappend="${#strings.isEmpty(r.result?.value)} ? ' is-empty' : ''"
+                                            th:attr="data-result=${#strings.toLowerCase(#strings.trim(#strings.isEmpty(r.result?.value) ? '' : r.result.value))}"
+                                            th:text="${#strings.isEmpty(r.result?.value) ? '—' : r.result.value}">
+                                            —
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <span class="tag tag-status"
+                                            th:attr="data-status=${#strings.toLowerCase(r.status)}"
+                                            th:text="${r.status != null ? r.status : '—'}">—</span>
+                                    </td>
+
+                                    <td class="actions-cell">
+                                        <!-- open -->
+                                        <a class="btn btn-accent btn-sm" th:if="${!isEditing and canEditRow}"
+                                            th:href="@{/professor/exam(examId=${examId}, sort=${sortKey}, sortDir=${sortDir}, editStudentNumber=${r.student.number})}">
+                                            <span class="icon"></span> MODIFICA
+                                        </a>
+
+                                        <!-- close -->
+                                        <a class="btn btn-sm btn-ghost" th:if="${isEditing}"
+                                            th:href="@{/professor/exam(examId=${examId}, sort=${sortKey}, sortDir=${sortDir})}">
+                                            Chiudi
+                                        </a>
+
+                                        <!-- placeholder -->
+                                        <span class="muted" th:if="${!isEditing and !canEditRow}">—</span>
+                                    </td>
+                                </tr>
+
+                                <!-- Riga form -->
+                                <tr class="edit-row" th:if="${isEditing and canEditRow}">
+                                    <td colspan="8">
+                                        <div class="edit-panel">
+                                            <div class="edit-head">
+                                                <div>
+                                                    <div class="edit-title">Modifica risultato</div>
+                                                    <div class="edit-sub"
+                                                        th:text="|${r.student.number} · ${r.student.surname} ${r.student.name} · ${r.student.email}|">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <form class="edit-form" method="post"
+                                                th:action="@{/professor/registrations/{id}/result(id=${r.id})}">
+                                                <input type="hidden" th:name="${_csrf.parameterName}"
+                                                    th:value="${_csrf.token}" />
+
+                                                <input type="hidden" name="examId" th:value="${examId}" />
+                                                <input type="hidden" name="studentNumber"
+                                                    th:value="${r.student.number}" />
+
+                                                <!-- per tornare mantenendo sorting -->
+                                                <input type="hidden" name="sort" th:value="${sortKey}" />
+                                                <input type="hidden" name="sortDir" th:value="${sortDir}" />
+
+                                                <div class="grid">
+                                                    <div class="field">
+                                                        <div class="label">Nome</div>
+                                                        <div class="value" th:text="${r.student.name}">Mario</div>
+                                                    </div>
+
+                                                    <div class="field">
+                                                        <div class="label">Cognome</div>
+                                                        <div class="value" th:text="${r.student.surname}">Rossi</div>
+                                                    </div>
+
+                                                    <div class="field">
+                                                        <div class="label">Email</div>
+                                                        <div class="value mono" th:text="${r.student.email}">
+                                                            mario.rossi@...</div>
+                                                    </div>
+
+                                                    <div class="field">
+                                                        <div class="label">Corso di studi</div>
+                                                        <div class="value"
+                                                            th:text="|${r.student.major.name} · ${r.student.major.degreeLevel.name} (${r.student.major.degreeLevel.yearsOfStudy} anni)|">
+                                                            Informatica · Laurea Triennale (3 anni)
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="field field-wide">
+                                                        <div class="label">Risultato</div>
+
+                                                        <select name="resultId" required>
+                                                            <option th:each="res : ${results}" th:value="${res.id}"
+                                                                th:text="${res.value}"
+                                                                th:selected="${r.result != null and res.id == r.result.id}">
+                                                            </option>
+                                                        </select>
+
+                                                        <div class="hint">
+                                                            Salvando: inserisce/aggiorna il risultato e imposta lo
+                                                            status a “inserito” se prima era “non inserito”.
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="edit-actions">
+                                                    <button class="btn btn-accent" type="submit">Salva</button>
+                                                    <a class="btn btn-ghost"
+                                                        th:href="@{/professor/exam(examId=${examId}, sort=${sortKey}, sortDir=${sortDir})}">
+                                                        Annulla
+                                                    </a>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                            </th:block>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </section>
+
+    </div>
+</body>
+
+</html>

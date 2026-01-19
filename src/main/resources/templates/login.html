@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="it" xmlns="www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login · MyPoliHub</title>
+
+    <link rel="stylesheet" href="/css/adminPanel.css">
+    <link rel="stylesheet" th:href="@{/css/login.css(v=${#dates.createNow().time})}">
+</head>
+
+<body class="login-page">
+    <div class="login-bg">
+        <div class="bg-orb orb-1"></div>
+        <div class="bg-orb orb-2"></div>
+        <div class="bg-grid"></div>
+    </div>
+
+    <main class="login-shell">
+        <header class="login-topbar">
+            <div class="brand">
+                <div class="logo">MP</div>
+                <div class="title">
+                    <h1>MyPoliHub</h1>
+                    <span>Accedi</span>
+                </div>
+            </div>
+        </header>
+
+        <section class="login-card" aria-label="Login">
+            <div class="login-card-head">
+                <div class="head-left">
+                    <h2>Login</h2>
+                    <p>Inserisci le credenziali per continuare.</p>
+                </div>
+            </div>
+
+            <div class="alert alert-danger" th:if="${param.error != null}">
+                Credenziali non valide. Riprova.
+            </div>
+
+            <div class="alert alert-ok" th:if="${param.logout != null}">
+                Logout effettuato correttamente.
+            </div>
+
+            <form class="login-form" method="post" th:action="@{/login}">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                <label class="field">
+                    <span class="field-label">Email</span>
+                    <span class="field-control">
+                        <span class="field-ico" aria-hidden="true">@</span>
+                        <input type="text" name="username" autocomplete="username"
+                            placeholder="nome.cognome@mail.polimi.it" required />
+                    </span>
+                </label>
+
+                <label class="field">
+                    <span class="field-label">Password</span>
+                    <span class="field-control">
+                        <span class="field-ico" aria-hidden="true">●</span>
+                        <input type="password" name="password" autocomplete="current-password" placeholder="••••••••"
+                            required />
+                    </span>
+                </label>
+
+                <div class="login-actions">
+                    <button class="btn btn-accent btn-login" type="submit">
+                        <span class="btn-shine" aria-hidden="true"></span>
+                        Accedi
+                    </button>
+                </div>
+            </form>
+
+            <footer class="login-foot">
+                <div class="hint">
+                    Usa la tua email universitaria. Se hai problemi, contatta l’amministratore.
+                </div>
+            </footer>
+        </section>
+    </main>
+</body>
+
+</html>

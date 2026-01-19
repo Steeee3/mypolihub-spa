@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home · MyPoliHub</title>
+
+    <link rel="stylesheet" href="/css/adminPanel.css">
+    <link rel="stylesheet" th:href="@{/css/home.css(v=${#dates.createNow().time})}">
+</head>
+
+<body>
+    <div class="container home-shell">
+
+        <!-- TOPBAR -->
+        <header class="topbar home-topbar">
+            <div class="brand">
+                <div class="logo">MP</div>
+                <div class="title">
+                    <h1>MyPoliHub</h1>
+                    <span th:text="|Ciao ${helloName} 👋|">Ciao 👋</span>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <a class="btn btn-accent" th:href="@{/home}">
+                    <span class="icon orange"></span> Home
+                </a>
+                <a class="btn btn-accent" th:if="${role != null and role.name() == 'PROFESSOR'}"
+                    th:href="@{/professor/reports}">
+                    <span class="icon purple"></span> Verbali
+                </a>
+                <a class="btn" th:href="@{/logout}">
+                    <span class="icon"></span> Logout
+                </a>
+            </div>
+        </header>
+
+        <!-- HERO -->
+        <section class="hero">
+            <div class="hero-left">
+                <div class="hero-pill">
+                    <span class="dot"></span>
+                    <span th:text="|Dashboard ${role != null ? role : ''}|">Dashboard</span>
+                </div>
+
+                <h2 class="hero-title">I tuoi corsi, a colpo d'occhio.</h2>
+                <p class="hero-sub">
+                    Panoramica dei tuoi corsi, con accesso immediato ad appelli e informazioni essenziali.
+                </p>
+            </div>
+
+            <aside class="hero-right">
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <div class="stat-title">Totale corsi</div>
+                        <div class="stat-badge" th:text="${courses != null ? courses.size() : 0}">0</div>
+                    </div>
+                    <div class="stat-sub">Corsi associati al tuo profilo</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <div class="stat-title">Carico CFU</div>
+                        <div class="stat-badge"
+                            th:with="sumCfu=${courses != null ? #aggregates.sum(courses.![cfu]) : null}"
+                            th:text="${sumCfu != null ? sumCfu : 0}">
+                            0
+                        </div>
+                    </div>
+                    <div class="stat-sub">Somma CFU dei corsi visibili</div>
+                </div>
+            </aside>
+        </section>
+
+        <!-- MAIN -->
+        <main class="main-grid">
+            <!-- COURSES -->
+            <section class="card courses-card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">I tuoi corsi</h2>
+                        <p class="card-sub">Nome, CFU, major e docente. Apri i dettagli per più info.</p>
+                    </div>
+                    <span class="pill" th:text="|Totali: ${courses != null ? courses.size() : 0}|">Totali: 0</span>
+                </div>
+
+                <div class="card-body">
+                    <div class="note" th:if="${courses == null or courses.isEmpty()}">
+                        Nessun corso disponibile al momento.
+                    </div>
+
+                    <div id="coursesGrid" class="courses-grid" th:if="${courses != null and !courses.isEmpty()}">
+
+                        <article class="course-card" th:each="c : ${courses}" th:id="|course-${c.id}|"
+                            th:classappend="${selectedCourseId != null and selectedCourseId == c.id} ? ' is-selected' : ''">
+                            <div class="course-accent"></div>
+
+                            <div class="course-head">
+                                <div class="course-head-left">
+                                    <h3 class="course-name" th:text="${c.name}">Nome corso</h3>
+
+                                    <div class="course-badges">
+                                        <span class="badge">
+                                            <span class="chip-ico"></span>
+                                            <span th:text="|${c.cfu} CFU|">0 CFU</span>
+                                        </span>
+
+                                        <span class="badge badge-soft">
+                                            <span class="chip-ico purple"></span>
+                                            <span
+                                                th:text="${c.semester != null ? c.semester + ' SEMESTRE' : '—'}">Semestre</span>
+                                        </span>
+
+                                        <span class="badge badge-soft">
+                                            <span class="chip-ico orange"></span>
+                                            <span
+                                                th:text="${c.professor != null ? (c.professor.name + ' ' + c.professor.surname) : '—'}">
+                                                Docente
+                                            </span>
+                                        </span>
+
+                                        <a class="btn btn-accent" style="padding: 9px 12px;"
+                                            th:href="|/home?courseId=${c.id}#course-${c.id}|">
+                                            <span class="icon"></span> Visualizza Appelli
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="course-kpi">
+                                    <div class="k">
+                                        <div class="num" th:text="${c.students != null ? c.students.size() : 0}">0</div>
+                                        <div class="txt">Iscritti</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <details class="course-details"
+                                th:attr="open=${selectedCourseId != null and selectedCourseId == c.id}">
+                                <summary>
+                                    <span class="summary-left">
+                                        <span class="chev"></span>
+                                        Dettagli
+                                    </span>
+                                </summary>
+
+                                <div class="details-body">
+                                    <div class="details-row">
+                                        <div class="details-label">Docente</div>
+                                        <div class="details-value"
+                                            th:text="${c.professor != null ? (c.professor.name + ' ' + c.professor.surname) : '—'}">
+                                            —</div>
+                                    </div>
+
+                                    <div class="details-row">
+                                        <div class="details-label">Semestre</div>
+                                        <div class="details-value">
+                                            <span
+                                                th:text="${c.semester != null ? c.semester + ' SEMESTRE' : '—'}">0</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="details-row">
+                                        <div class="details-label">Percorso</div>
+                                        <div class="details-value">
+                                            <div th:each="m : ${c.majors}">
+                                                <span th:text="${m != null ? m.name : '—'}">—</span>
+                                                ·
+                                                <span
+                                                    th:text="${m != null && m.degreeLevel != null ? m.degreeLevel.name : '—'}">—</span>
+                                                <br>
+                                                <span class="major-year"
+                                                    th:text="${c.getYearOfStudyForMajor(m) != null ? c.getYearOfStudyForMajor(m) + ' Anno' : '—'}">—</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="details-row">
+                                        <div class="details-label">Iscritti</div>
+                                        <div class="details-value">
+                                            <span th:text="${c.students != null ? c.students.size() : 0}">0</span>
+                                            <span class="muted">totali</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="exam-block"
+                                        th:if="${selectedCourseId != null and selectedCourseId == c.id}">
+
+                                        <div class="exam-head">
+                                            <div class="details-label">Appelli disponibili</div>
+                                            <span class="mini-pill"
+                                                th:text="${exams != null ? exams.size() : 0}">0</span>
+                                        </div>
+
+                                        <div class="exam-list" th:if="${exams != null and !exams.isEmpty()}">
+                                            <div class="exam-row" th:each="e : ${exams}">
+                                                <a class="exam-item" th:href="${role.name() == 'PROFESSOR'} 
+                    ? @{/professor/exam(examId=${e.id})} 
+                    : @{/student/result(examId=${e.id})}">
+                                                    <div class="exam-date"
+                                                        th:text="${#temporals.format(e.date, 'dd/MM/yyyy')}">01/01/2026
+                                                    </div>
+                                                    <div class="exam-time"
+                                                        th:text="${#temporals.format(e.date, 'HH:mm')}">
+                                                        10:30</div>
+                                                </a>
+
+                                                <div class="exam-actions">
+
+                                                    <span class="pill pill-ok" th:if="${role != null and role.name() == 'STUDENT'
+                           and registeredExamIds != null
+                           and registeredExamIds.contains(e.id)}">
+                                                        <span class="ok-ico"></span> Iscritto
+                                                    </span>
+
+                                                    <form th:if="${role != null and role.name() == 'STUDENT'
+                           and (registeredExamIds == null or !registeredExamIds.contains(e.id))}" method="post"
+                                                        th:action="@{/student/exam/{examId}/register(examId=${e.id})}">
+                                                        <input type="hidden" name="courseId"
+                                                            th:value="${selectedCourseId}" />
+                                                        <input type="hidden" th:name="${_csrf.parameterName}"
+                                                            th:value="${_csrf.token}" />
+                                                        <button class="btn btn-accent btn-mini"
+                                                            type="submit">Iscriviti</button>
+                                                    </form>
+
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="note" style="margin-top:10px;"
+                                            th:if="${exams == null or exams.isEmpty()}">
+                                            Nessun appello disponibile.
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </details>
+                        </article>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- SIDE -->
+            <aside class="side-col">
+                <section class="card mini side-card">
+                    <h3>Tips</h3>
+                    <p class="note">
+                        Usa la sezione <strong>Dettagli</strong> per vedere percorso, semestre e iscritti. 
+                        <br>Gli appelli compaiono solo alla selezione del bottone
+                        <strong>Visualizza Appelli</strong>
+                    </p>
+                </section>
+
+                <section class="card mini side-card">
+                    <h3>Stato</h3>
+                    <div class="kpi">
+                        <div class="box">
+                            <div class="num" th:text="${courses != null ? courses.size() : 0}">0</div>
+                            <div class="txt">Corsi</div>
+                        </div>
+                        <div class="box">
+                            <div class="num"
+                                th:with="sumCfu=${courses != null ? #aggregates.sum(courses.![cfu]) : null}"
+                                th:text="${sumCfu != null ? sumCfu : 0}">
+                                0
+                            </div>
+                            <div class="txt">CFU totali</div>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+        </main>
+
+    </div>
+</body>
+
+</html>

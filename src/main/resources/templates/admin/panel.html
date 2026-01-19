@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="/css/adminPanel.css">
+</head>
+
+<body>
+    <div class="container">
+
+        <!-- TOP BAR -->
+        <div class="topbar">
+            <div class="brand">
+                <div class="logo">MP</div>
+                <div class="title">
+                    <h1>MyPoliHub · Admin Panel</h1>
+                    <span>Gestione rapida: import utenti e creazione corsi</span>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <!-- link utili -->
+                <a class="btn btn-accent" th:href="@{/home}">
+                    <span class="icon orange"></span> Home
+                </a>
+                <a class="btn" th:href="@{/logout}">
+                    <span class="icon"></span> Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- IMPORT REPORT -->
+        <div th:if="${report != null}" class="card mini" style="margin-top:16px;">
+            <h3>Report import</h3>
+
+            <p>
+                Creati: <strong th:text="${report.created}">0</strong>
+                · Saltati: <strong th:text="${report.skipped}">0</strong>
+            </p>
+
+            <div th:if="${report.errors != null and !report.errors.isEmpty()}">
+                <h4 style="margin: 10px 0 6px;">Errori</h4>
+                <ul>
+                    <li th:each="e : ${report.errors}" th:text="${e}"></li>
+                </ul>
+            </div>
+
+            <p th:if="${report.errors == null or report.errors.isEmpty()}" style="opacity:.8;">
+                Nessun errore
+            </p>
+        </div>
+
+        <div class="grid">
+
+            <!-- MAIN AREA -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Gestione utenti</h2>
+                        <p class="card-sub">
+                            Carica un file <strong>.txt</strong> con <em>una riga per utente</em> (es.
+                            <code>Nome Cognome</code>).
+                            La password verrà hashata dal backend.
+                        </p>
+                    </div>
+                    <span class="pill">Import da file</span>
+                </div>
+
+                <div class="card-body">
+
+                    <!-- SECTION: ADD ADMINS -->
+                    <section class="card" style="box-shadow:none; background: rgba(255,255,255,.03);">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Aggiungi Admin</h3>
+                                <p class="card-sub">Importa una lista di admin da file oppure crea manualmente.</p>
+                            </div>
+                            <span class="pill"><span class="icon purple"></span>&nbsp;ROLE_ADMIN</span>
+                        </div>
+
+                        <div class="card-body">
+                            <form th:action="@{/admin/import-users}" method="post" enctype="multipart/form-data">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <input type="hidden" name="role" value="ADMIN" />
+
+                                <div class="row">
+                                    <div class="field">
+                                        <div class="label">File (txt)</div>
+                                        <input type="file" name="file" accept=".txt,text/plain" required />
+                                        <div class="help">Formato riga: <code>Nome Cognome</code> (cognome può essere
+                                            composto).</div>
+                                    </div>
+                                    <div class="field">
+                                        <div class="label">Password default (DEV)</div>
+                                        <input type="text" name="defaultPassword" value="password" required />
+                                        <div class="help">Consigliato: obbligo cambio password al primo login (backend).
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="actions">
+                                    <button class="btn btn-accent" type="submit">
+                                        <span class="icon purple"></span> Importa Admin
+                                    </button>
+                                </div>
+                            </form>
+                            <details class="reveal">
+                                <summary class="btn">
+                                    <span class="icon"></span> Aggiungi manualmente
+                                </summary>
+
+                                <div class="reveal-body">
+                                    <form th:action="@{/admin/users}" method="post">
+                                        <input type="hidden" th:name="${_csrf.parameterName}"
+                                            th:value="${_csrf.token}" />
+                                        <input type="hidden" name="role" value="ADMIN" />
+
+                                        <div class="row">
+                                            <div class="field">
+                                                <div class="label">Nome</div>
+                                                <input type="text" name="name" required />
+                                            </div>
+                                            <div class="field">
+                                                <div class="label">Cognome</div>
+                                                <input type="text" name="surname" required />
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="field">
+                                                <div class="label">Password (DEV)</div>
+                                                <input type="text" name="password" value="password" required />
+                                            </div>
+                                        </div>
+
+                                        <div class="actions">
+                                            <button class="btn btn-accent" type="submit">
+                                                <span class="icon purple"></span> Crea Admin
+                                            </button>
+                                        </div>
+
+                                        <p th:if="${userMsg != null}" th:text="${userMsg}" style="margin-top:10px;"></p>
+                                        <p th:if="${userError != null}" th:text="${userError}"
+                                            style="margin-top:10px; color:#ff4d4d;"></p>
+                                    </form>
+                                </div>
+                            </details>
+                        </div>
+                    </section>
+
+                    <div class="divider"></div>
+
+                    <!-- SECTION: ADD STUDENTS -->
+                    <section class="card" style="box-shadow:none; background: rgba(255,255,255,.03);">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Aggiungi Studenti</h3>
+                                <p class="card-sub">Import rapido studenti da file. Email unica generata dal backend.
+                                </p>
+                            </div>
+                            <span class="pill"><span class="icon green"></span>&nbsp;ROLE_STUDENT</span>
+                        </div>
+
+                        <div class="card-body">
+                            <form th:action="@{/admin/import-users}" method="post" enctype="multipart/form-data">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <input type="hidden" name="role" value="STUDENT" />
+
+                                <div class="row">
+                                    <div class="field">
+                                        <div class="label">Major</div>
+                                        <select name="majorId" required>
+                                            <option value="" disabled selected>Seleziona un percorso di laurea…</option>
+                                            <option th:each="m : ${majors}" th:value="${m.id}" th:text="${m.name}">
+                                            </option>
+                                        </select>
+                                        <div class="help">Obbligatorio per import studenti.</div>
+                                    </div>
+                                    <div class="field">
+                                        <div class="label">File (txt)</div>
+                                        <input type="file" name="file" accept=".txt,text/plain" required />
+                                        <div class="help">1 riga = 1 studente. Esempio: <code>Enrico De Angelis</code>
+                                        </div>
+                                    </div>
+                                    <div class="field">
+                                        <div class="label">Password default (DEV)</div>
+                                        <input type="text" name="defaultPassword" value="password" required />
+                                        <div class="help">In produzione: password random + reset password.</div>
+                                    </div>
+                                </div>
+
+                                <div class="actions">
+                                    <button class="btn btn-accent" type="submit">
+                                        <span class="icon green"></span> Importa Studenti
+                                    </button>
+                                </div>
+                            </form>
+                            <details class="reveal">
+                                <summary class="btn">
+                                    <span class="icon"></span> Aggiungi manualmente
+                                </summary>
+
+                                <div class="reveal-body">
+                                    <form th:action="@{/admin/users}" method="post">
+                                        <input type="hidden" th:name="${_csrf.parameterName}"
+                                            th:value="${_csrf.token}" />
+                                        <input type="hidden" name="role" value="STUDENT" />
+
+                                        <div class="row">
+                                            <div class="field">
+                                                <div class="label">Nome</div>
+                                                <input type="text" name="name" required />
+                                            </div>
+                                            <div class="field">
+                                                <div class="label">Cognome</div>
+                                                <input type="text" name="surname" required />
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="field">
+                                                <div class="label">Major</div>
+                                                <select name="majorId" required>
+                                                    <option value="" disabled selected>Seleziona un percorso di
+                                                        laurea…</option>
+                                                    <option th:each="m : ${majors}" th:value="${m.id}"
+                                                        th:text="${m.name}"></option>
+                                                </select>
+                                            </div>
+
+                                            <div class="field">
+                                                <div class="label">Password (DEV)</div>
+                                                <input type="text" name="password" value="password" required />
+                                            </div>
+                                        </div>
+
+                                        <div class="actions">
+                                            <button class="btn btn-accent" type="submit">
+                                                <span class="icon green"></span> Crea Studente
+                                            </button>
+                                        </div>
+
+                                        <p th:if="${userMsg != null}" th:text="${userMsg}" style="margin-top:10px;"></p>
+                                        <p th:if="${userError != null}" th:text="${userError}"
+                                            style="margin-top:10px; color:#ff4d4d;"></p>
+                                    </form>
+                                </div>
+                            </details>
+                        </div>
+                    </section>
+
+                    <div class="divider"></div>
+
+                    <!-- SECTION: ADD PROFESSORS -->
+                    <section class="card" style="box-shadow:none; background: rgba(255,255,255,.03);">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Aggiungi Professori</h3>
+                                <p class="card-sub">Import professori da file. Backend: stessa logica studenti.</p>
+                            </div>
+                            <span class="pill"><span class="icon orange"></span>&nbsp;ROLE_PROFESSOR</span>
+                        </div>
+
+                        <div class="card-body">
+                            <form th:action="@{/admin/import-users}" method="post" enctype="multipart/form-data">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <input type="hidden" name="role" value="PROFESSOR" />
+
+                                <div class="row">
+                                    <div class="field">
+                                        <div class="label">File (txt)</div>
+                                        <input type="file" name="file" accept=".txt,text/plain" required />
+                                        <div class="help">Formato: <code>Nome Cognome</code>. Il cognome può contenere
+                                            spazi.</div>
+                                    </div>
+                                    <div class="field">
+                                        <div class="label">Password default (DEV)</div>
+                                        <input type="text" name="defaultPassword" value="password" required />
+                                        <div class="help">Hash BCrypt consigliato (backend).</div>
+                                    </div>
+                                </div>
+
+                                <div class="actions">
+                                    <button class="btn btn-accent" type="submit">
+                                        <span class="icon orange"></span> Importa Professori
+                                    </button>
+
+                                </div>
+                            </form>
+                            <details class="reveal">
+                                <summary class="btn">
+                                    <span class="icon"></span> Aggiungi manualmente
+                                </summary>
+
+                                <div class="reveal-body">
+                                    <form th:action="@{/admin/users}" method="post">
+                                        <input type="hidden" th:name="${_csrf.parameterName}"
+                                            th:value="${_csrf.token}" />
+                                        <input type="hidden" name="role" value="PROFESSOR" />
+
+                                        <div class="row">
+                                            <div class="field">
+                                                <div class="label">Nome</div>
+                                                <input type="text" name="name" required />
+                                            </div>
+                                            <div class="field">
+                                                <div class="label">Cognome</div>
+                                                <input type="text" name="surname" required />
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="field">
+                                                <div class="label">Password (DEV)</div>
+                                                <input type="text" name="password" value="password" required />
+                                            </div>
+                                        </div>
+
+                                        <div class="actions">
+                                            <button class="btn btn-accent" type="submit">
+                                                <span class="icon orange"></span> Crea Professore
+                                            </button>
+                                        </div>
+
+                                        <p th:if="${userMsg != null}" th:text="${userMsg}" style="margin-top:10px;"></p>
+                                        <p th:if="${userError != null}" th:text="${userError}"
+                                            style="margin-top:10px; color:#ff4d4d;"></p>
+                                    </form>
+                                </div>
+                            </details>
+                        </div>
+                    </section>
+
+                    <div class="divider"></div>
+
+                    <!-- SECTION: ADD COURSE -->
+                    <section class="card" style="box-shadow:none; background: rgba(255,255,255,.03);">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Aggiungi Corso</h3>
+                                <p class="card-sub">
+                                    Crea un corso scegliendo una o più majors e il professore esistente.
+                                </p>
+                            </div>
+                            <span class="pill">Corsi</span>
+                        </div>
+
+                        <div class="card-body">
+                            <form th:action="@{/admin/courses}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                                <div class="row">
+                                    <div class="field">
+                                        <div class="label">Nome corso</div>
+                                        <input type="text" name="courseName" maxlength="50"
+                                            placeholder="es. Ingegneria del Software" required />
+                                    </div>
+
+                                    <div class="field">
+                                        <div class="label">CFU</div>
+                                        <input type="number" name="cfu" min="1" max="30" placeholder="es. 10"
+                                            required />
+                                    </div>
+                                </div>
+
+                                <div class="row" style="margin-top: 12px;">
+                                    <div class="field" style="max-width: 360px;">
+                                        <div class="label">Semestre</div>
+                                        <select name="semester" required>
+                                            <option value="" disabled selected>Seleziona semestre…</option>
+                                            <option value="PRIMO">Primo semestre</option>
+                                            <option value="SECONDO">Secondo semestre</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="field" style="flex: 1;">
+                                        <div class="label">Professore</div>
+
+                                        <input type="text" name="professorId" list="professorsList"
+                                            placeholder="Cerca e seleziona (scrivi il nome)…" required />
+
+                                        <datalist id="professorsList">
+                                            <option th:each="p : ${professors}" th:value="${p.id}"
+                                                th:text="|${p.user.name} ${p.user.surname}|">
+                                            </option>
+                                        </datalist>
+
+                                        <div class="help">
+                                            Inizia a digitare: ti verranno suggeriti i professori esistenti.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="field" style="margin-top: 12px;">
+                                    <div class="label">Percorso di studi e anno del corso</div>
+
+                                    <div class="majors-years-wrap majors-years-wrap--stack">
+                                        <div class="majors-col">
+                                            <select id="majorsSelect" name="majorsUi" class="multi-select" multiple
+                                                required size="7">
+                                                <option th:each="m : ${majors}" th:value="${m.id}" th:attr="data-maxyears=${m.degreeLevel != null ? m.degreeLevel.yearsOfStudy : 1},
+                               data-majorname=${m.name},
+                               data-degreetag=${m.degreeLevel != null ? m.degreeLevel.name : ''}"
+                                                    th:text="|${m.name} · ${m.degreeLevel != null ? m.degreeLevel.name : ''}|">
+                                                </option>
+                                            </select>
+
+                                            <div class="help">
+                                                Seleziona almeno una major (Ctrl/Cmd per selezioni multiple).
+                                            </div>
+                                        </div>
+
+                                        <div class="years-col">
+                                            <div id="yearsPanel" class="years-panel">
+                                                <div class="note" style="margin:0;">Seleziona una o più majors per
+                                                    inserire gli anni.</div>
+                                            </div>
+
+                                            <div id="hiddenMajorsContainer"></div>
+
+                                            <div class="help">
+                                                Seleziona l'anno <strong>per ogni</strong> percorso di studi selzionato.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="actions">
+                                    <button class="btn btn-accent" type="submit">
+                                        <span class="icon"></span> Crea corso
+                                    </button>
+                                    <a class="btn" th:href="@{/admin/courses}">
+                                        <span class="icon"></span> Vai a gestione corsi
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
+
+                    <div class="divider"></div>
+
+                    <!-- SECTION: ADD EXAM -->
+                    <section class="card" style="box-shadow:none; background: rgba(255,255,255,.03);">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Crea esame</h3>
+                                <p class="card-sub">Crea un appello scegliendo un corso esistente e la data/ora.</p>
+                            </div>
+                            <span class="pill">Esami</span>
+                        </div>
+
+                        <div class="card-body">
+                            <form th:action="@{/admin/exams}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                                <div class="row">
+                                    <div class="field">
+                                        <div class="label">Corso</div>
+                                        <select name="courseId" required>
+                                            <option value="" disabled selected>Scegli un corso…</option>
+                                            <option th:each="c : ${courses}" th:value="${c.id}" th:text="${c.name}">
+                                            </option>
+                                        </select>
+                                        <div class="help">Seleziona il corso a cui associare l’appello.</div>
+                                    </div>
+
+                                    <div class="field">
+                                        <div class="label">Data esame</div>
+                                        <input type="datetime-local" name="date" step="60" required />
+                                        <div class="help">Seleziona data e ora dell’appello.</div>
+                                    </div>
+                                </div>
+
+                                <div class="actions">
+                                    <button class="btn btn-accent" type="submit">
+                                        <span class="icon"></span> Crea esame
+                                    </button>
+                                </div>
+
+                                <p th:if="${examMsg != null}" th:text="${majorMsg}" style="margin-top:10px;"></p>
+                                <p th:if="${examError != null}" th:text="${majorError}"
+                                    style="margin-top:10px; color: #ff4d4d;"></p>
+                            </form>
+                        </div>
+                    </section>
+
+                    <div class="divider"></div>
+
+                    <!-- SECTION: ADD MAJOR -->
+                    <section class="card" style="box-shadow:none; background: rgba(255,255,255,.03);">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Crea Major (Percorso di laurea)</h3>
+                                <p class="card-sub">Esempio: Ingegneria Informatica, Ingegneria Gestionale, ...</p>
+                            </div>
+                            <span class="pill">Majors</span>
+                        </div>
+
+                        <div class="card-body">
+                            <form th:action="@{/admin/majors}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                                <div class="row">
+                                    <div class="field">
+                                        <div class="label">Nome major</div>
+                                        <input type="text" name="majorName" placeholder="Es. Ingegneria Informatica"
+                                            required />
+                                        <div class="help">Verranno rimossi doppi spazi e controllata l’unicità.</div>
+                                    </div>
+
+                                    <div class="field">
+                                        <div class="label">Degree level</div>
+                                        <select name="degreeLevelId" required>
+                                            <option value="" disabled selected>Seleziona livello…</option>
+                                            <option th:each="dl : ${degreeLevels}" th:value="${dl.id}"
+                                                th:text="|${dl.name} · ${dl.yearsOfStudy} anni|">
+                                            </option>
+                                        </select>
+                                        <div class="help">Obbligatorio: associa la major al livello
+                                            (triennale/magistrale...).</div>
+                                    </div>
+                                </div>
+
+                                <div class="actions">
+                                    <button class="btn btn-accent" type="submit">Crea Major</button>
+                                </div>
+
+                                <p th:if="${majorMsg != null}" th:text="${majorMsg}" style="margin-top:10px;"></p>
+                                <p th:if="${majorError != null}" th:text="${majorError}"
+                                    style="margin-top:10px; color: #ff4d4d;"></p>
+                            </form>
+                        </div>
+                    </section>
+
+                </div>
+            </div>
+
+            <!-- SIDE AREA -->
+            <div class="side">
+
+                <div class="card mini">
+                    <h3>Stato</h3>
+                    <p>Azioni rapide, import da file e scorciatoie. Puoi anche mostrare KPI dal backend.</p>
+
+                    <div class="kpi">
+                        <div class="box">
+                            <div class="num" th:text="${usersCount != null ? usersCount : '—'}">—</div>
+                            <div class="txt">Utenti totali</div>
+                        </div>
+                        <div class="box">
+                            <div class="num" th:text="${coursesCount != null ? coursesCount : '—'}">—</div>
+                            <div class="txt">Corsi totali</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mini">
+                    <h3>Formato file consigliato</h3>
+                    <p>Una riga per utente:</p>
+                    <div class="note">
+                        <strong>Esempio</strong><br />
+                        Marco Rossi<br />
+                        Enrico De Angelis<br />
+                        Giulia D’Angelo
+                    </div>
+                    <p>Il backend può: normalizzare spazi, capitalizzare e generare email unica.</p>
+                </div>
+
+                <div class="card mini">
+                    <h3>Sicurezza</h3>
+                    <p class="note">
+                        <strong>Consigliato:</strong> pagina accessibile solo a <strong>ROLE_ADMIN</strong>.
+                        Per password, usa BCrypt e considera “must change password” al primo login.
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            const majorsSelect = document.getElementById('majorsSelect');
+            const yearsPanel = document.getElementById('yearsPanel');
+            const hidden = document.getElementById('hiddenMajorsContainer');
+
+            if (!majorsSelect || !yearsPanel || !hidden) return;
+
+            function clearNode(node) {
+                while (node.firstChild) node.removeChild(node.firstChild);
+            }
+
+            function getSelectedOptions() {
+                return Array.from(majorsSelect.selectedOptions);
+            }
+
+            function render() {
+                const selected = getSelectedOptions();
+
+                clearNode(yearsPanel);
+                clearNode(hidden);
+
+                if (selected.length === 0) {
+                    const note = document.createElement('div');
+                    note.className = 'note';
+                    note.style.margin = '0';
+                    note.textContent = 'Seleziona una o più majors per inserire gli anni.';
+                    yearsPanel.appendChild(note);
+                    return;
+                }
+
+                const grid = document.createElement('div');
+                grid.className = 'years-grid';
+
+                selected.forEach((opt) => {
+                    const majorId = opt.value;
+                    const majorName = opt.dataset.majorname || opt.textContent || '';
+                    const degreeTag = opt.dataset.degreetag || '';
+                    const maxYears = parseInt(opt.dataset.maxyears || '1', 10) || 1;
+
+                    const row = document.createElement('div');
+                    row.className = 'years-row';
+
+                    const left = document.createElement('div');
+
+                    const title = document.createElement('div');
+                    title.className = 'years-major-name';
+                    title.textContent = majorName;
+
+                    const sub = document.createElement('div');
+                    sub.className = 'years-major-sub';
+                    sub.textContent = `${degreeTag ? degreeTag + ' · ' : ''}max ${maxYears} anni`;
+
+                    left.appendChild(title);
+                    left.appendChild(sub);
+
+                    const input = document.createElement('input');
+                    input.className = 'years-input';
+                    input.type = 'number';
+                    input.min = '1';
+                    input.max = String(maxYears);
+                    input.step = '1';
+                    input.value = '1';
+                    input.inputMode = 'numeric';
+
+                    input.addEventListener('focus', () => input.select());
+
+                    const hMajor = document.createElement('input');
+                    hMajor.type = 'hidden';
+                    hMajor.name = 'majorId';
+                    hMajor.value = majorId;
+
+                    const hYear = document.createElement('input');
+                    hYear.type = 'hidden';
+                    hYear.name = 'yearsOfStudy';
+                    hYear.value = input.value;
+
+                    input.addEventListener('input', () => {
+                        hYear.value = input.value;
+                    });
+
+                    row.appendChild(left);
+                    row.appendChild(input);
+
+                    grid.appendChild(row);
+                    hidden.appendChild(hMajor);
+                    hidden.appendChild(hYear);
+                });
+
+                yearsPanel.appendChild(grid);
+            }
+
+            majorsSelect.addEventListener('change', render);
+            render();
+        })();
+    </script>
+</body>
+
+</html>
