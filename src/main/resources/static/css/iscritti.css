@@ -490,3 +490,115 @@
     border-color: rgba(148, 163, 184, 0.25);
     color: rgba(148, 163, 184, 0.95);
 }
+
+th .th-link {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    margin: 0;
+
+    color: inherit;
+    font: inherit;
+    text-align: left;
+
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+.modal-overlay[hidden] {
+    display: none !important;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(6px);
+    display: grid;
+    place-items: center;
+    padding: 18px;
+}
+
+.modal-card {
+    width: min(1100px, 96vw);
+    max-height: 86vh;
+    overflow: hidden;
+
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    box-shadow: var(--shadow);
+}
+
+.modal-head {
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid rgba(0, 40, 90, 0.10);
+}
+
+@media (prefers-color-scheme: dark) {
+    .modal-head {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+    }
+}
+
+.modal-title {
+    font-weight: 900;
+    letter-spacing: .2px;
+}
+
+.modal-sub {
+    margin-top: 4px;
+    font-size: 12.5px;
+    color: var(--muted);
+}
+
+.modal-head-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.modal-body {
+    padding: 14px 16px 16px;
+    display: grid;
+    gap: 12px;
+}
+
+.table-wrap--modal {
+    max-height: 60vh;
+}
+
+.table--modal {
+    min-width: 900px;
+}
+
+.bulk-select {
+    width: 100%;
+    max-width: 190px;
+    min-width: 140px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--text);
+    outline: none;
+    font: inherit;
+}
+
+.bulk-select:focus {
+    border-color: rgba(0, 90, 165, 0.55);
+    box-shadow: 0 0 0 4px rgba(0, 90, 165, 0.16);
+}

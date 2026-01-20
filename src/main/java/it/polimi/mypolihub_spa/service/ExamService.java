@@ -1,6 +1,7 @@
 package it.polimi.mypolihub_spa.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -10,6 +11,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import it.polimi.mypolihub_spa.DTO.BulkResultUpdateDTO;
 import it.polimi.mypolihub_spa.DTO.ExamDTO;
 import it.polimi.mypolihub_spa.DTO.RegistrationDTO;
 import it.polimi.mypolihub_spa.entity.Course;
@@ -152,6 +154,28 @@ public class ExamService {
 				.toList();
 	}
 
+	@Transactional(readOnly = true)
+	public RegistrationDTO getRegistrationById(Integer professorId, Integer registrationId) {
+		Registration registration = getRegistration(registrationId);
+
+		assertProfessorOwnsRegistration(professorId, registrationId);
+
+		return new RegistrationDTO(registration);
+	}
+
+	@Transactional(readOnly = true)
+	public List<RegistrationDTO> getAllRegistrationsById(Integer professorId, List<Integer> registrationids) {
+		List<RegistrationDTO> registrations = new ArrayList<>();
+
+		for (Integer id : registrationids) {
+			RegistrationDTO registration = getRegistrationById(professorId, id);
+
+			registrations.add(registration);
+		}
+
+		return registrations;
+	}
+
 	@Transactional
 	public void setResult(Integer professorId, Integer registrationId, Integer resultId) {
 		Registration registration = getRegistration(registrationId);
@@ -162,6 +186,16 @@ public class ExamService {
 		promoteStatusToInsertedIfNeeded(registration);
 
 		registration.setResult(getResult(resultId));
+	}
+
+	@Transactional
+	public void setResultBulk(Integer professorId, List<BulkResultUpdateDTO> updates) {
+		for (BulkResultUpdateDTO update : updates) {
+			int registrationId = update.registrationId();
+			int resultId = update.resultId();
+
+			setResult(professorId, registrationId, resultId);
+		}
 	}
 
 	@Transactional

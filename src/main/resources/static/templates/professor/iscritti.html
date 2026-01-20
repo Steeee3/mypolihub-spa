@@ -1,0 +1,232 @@
+<div class="container home-shell" id="mainContainer">
+
+    <div class="note note-danger" id="pageError" hidden>
+        <strong>Errore:</strong>
+        <span id="pageErrorText">Messaggio di errore…</span>
+    </div>
+
+    <section class="card" style="margin-top:18px;">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Iscritti all'appello</h2>
+                <p class="card-sub">
+                    Clicca un header per ordinare. Click ripetuto sullo stesso header inverte l'ordine.
+                </p>
+            </div>
+
+            <div class="header-actions">
+                <span class="pill" id="registrationsTotalPill">Totali: 0</span>
+
+                <div class="exam-actions" id="bulkActions" hidden>
+                    <button class="btn btn-accent btn-bulk btn-publish" id="btnPublish" type="button"
+                        title="Rende visibili agli studenti i risultati inseriti">
+                        Pubblica
+                    </button>
+
+                    <button class="btn btn-ghost btn-bulk btn-finalize" id="btnFinalize" type="button"
+                        title="Verbalizza i risultati pubblicati">
+                        Verbalizza
+                    </button>
+
+                    <button class="btn btn-ghost btn-bulk btn-multi" id="btnMultiInsert" type="button"
+                        title="Inserimento multiplo voti per righe in stato 'non inserito'">
+                        Inserimento multiplo
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="note" id="emptyRegistrationsNote" hidden>
+                Nessuno studente registrato per questo appello.
+            </div>
+
+            <div class="table-wrap" id="tableWrap" hidden>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="is-sortable" data-sort-key="student.number">
+                                <button type="button" class="th-link">
+                                    Matricola <span class="sort-ico"></span>
+                                </button>
+                            </th>
+
+                            <th class="is-sortable" data-sort-key="student.surname">
+                                <button type="button" class="th-link">
+                                    Cognome <span class="sort-ico"></span>
+                                </button>
+                            </th>
+
+                            <th class="is-sortable" data-sort-key="student.name">
+                                <button type="button" class="th-link">
+                                    Nome <span class="sort-ico"></span>
+                                </button>
+                            </th>
+
+                            <th class="is-sortable" data-sort-key="student.email">
+                                <button type="button" class="th-link">
+                                    Email <span class="sort-ico"></span>
+                                </button>
+                            </th>
+
+                            <th class="is-sortable" data-sort-key="student.major">
+                                <button type="button" class="th-link">
+                                    Corso di studi <span class="sort-ico"></span>
+                                </button>
+                            </th>
+
+                            <th class="is-sortable" data-sort-key="result">
+                                <button type="button" class="th-link">
+                                    Risultato <span class="sort-ico"></span>
+                                </button>
+                            </th>
+
+                            <th class="is-sortable" data-sort-key="status">
+                                <button type="button" class="th-link">
+                                    Status <span class="sort-ico"></span>
+                                </button>
+                            </th>
+
+                            <th class="th-actions">Azioni</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="registrationsBody"></tbody>
+                </table>
+
+                <template id="registrationRowTpl">
+                    <tr class="reg-row">
+                        <td class="mono reg-student-number">000000</td>
+                        <td class="reg-student-surname">Rossi</td>
+                        <td class="reg-student-name">Mario</td>
+                        <td class="mono reg-student-email">mario.rossi@...</td>
+                        <td class="major-cell reg-student-major">—</td>
+
+                        <td>
+                            <span class="tag tag-result reg-result" data-result="">—</span>
+                        </td>
+
+                        <td>
+                            <span class="tag tag-status reg-status" data-status="">—</span>
+                        </td>
+
+                        <td class="actions-cell reg-actions"></td>
+                    </tr>
+                </template>
+
+                <template id="editRowTpl">
+                    <tr class="edit-row">
+                        <td colspan="8">
+                            <div class="edit-panel">
+                                <div class="edit-head">
+                                    <div>
+                                        <div class="edit-title">Modifica risultato</div>
+                                        <div class="edit-sub" data-edit-sub></div>
+                                    </div>
+                                </div>
+
+                                <form class="edit-form" data-edit-form>
+                                    <div class="grid">
+                                        <div class="field">
+                                            <div class="label">Nome</div>
+                                            <div class="value" data-edit-name></div>
+                                        </div>
+
+                                        <div class="field">
+                                            <div class="label">Cognome</div>
+                                            <div class="value" data-edit-surname></div>
+                                        </div>
+
+                                        <div class="field">
+                                            <div class="label">Email</div>
+                                            <div class="value mono" data-edit-email></div>
+                                        </div>
+
+                                        <div class="field">
+                                            <div class="label">Corso di studi</div>
+                                            <div class="value" data-edit-major></div>
+                                        </div>
+
+                                        <div class="field field-wide">
+                                            <div class="label">Risultato</div>
+
+                                            <select name="resultId" required data-edit-select></select>
+
+                                            <div class="hint">
+                                                Salvando: inserisce/aggiorna il risultato e imposta lo status a
+                                                “inserito”
+                                                se prima era “non inserito”.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="edit-actions">
+                                        <button class="btn btn-accent" type="submit">Salva</button>
+                                        <button class="btn btn-ghost" type="button" data-edit-cancel>Annulla</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </template>
+            </div>
+        </div>
+    </section>
+
+    <!-- MODALE INSERIMENTO MULTIPLO -->
+    <div class="modal-overlay" id="multiModal" hidden>
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="multiModalTitle">
+            <div class="modal-head">
+                <div class="modal-head-left">
+                    <div class="modal-title" id="multiModalTitle">Inserimento multiplo</div>
+                    <div class="modal-sub">Solo righe in stato “non inserito”.</div>
+                </div>
+
+                <div class="modal-head-right">
+                    <span class="pill" id="multiRowsPill">Righe: 0</span>
+                    <button class="btn btn-ghost" type="button" id="btnMultiCancel">Annulla</button>
+                    <button class="btn btn-accent" type="button" id="btnMultiSend">Invia</button>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <div class="note note-danger" id="multiError" hidden>
+                    <strong>Errore:</strong>
+                    <span id="multiErrorText">Messaggio…</span>
+                </div>
+
+                <div class="note" id="multiEmpty" hidden>
+                    Nessuna riga in stato “non inserito”.
+                </div>
+
+                <div class="table-wrap table-wrap--modal" id="multiTableWrap" hidden>
+                    <table class="table table--modal">
+                        <thead>
+                            <tr>
+                                <th>Matricola</th>
+                                <th>Cognome</th>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Corso di studi</th>
+                                <th>Voto</th>
+                            </tr>
+                        </thead>
+                        <tbody id="multiTbody"></tbody>
+                    </table>
+
+                    <template id="multiRowTpl">
+                        <tr>
+                            <td class="mono mm-number">000000</td>
+                            <td class="mm-surname">—</td>
+                            <td class="mm-name">—</td>
+                            <td class="mono mm-email">—</td>
+                            <td class="major-cell mm-major">—</td>
+                            <td class="mm-vote"></td>
+                        </tr>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
