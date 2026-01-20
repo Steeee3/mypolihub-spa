@@ -1,0 +1,201 @@
+<div class="container home-shell" id="mainContainer">
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-left">
+            <div class="hero-pill">
+                <span class="dot"></span>
+                <span id="heroPillText">Dashboard</span>
+            </div>
+
+            <h2 class="hero-title">I tuoi corsi, a colpo d'occhio.</h2>
+            <p class="hero-sub">
+                Panoramica dei tuoi corsi, con accesso immediato ad appelli e informazioni essenziali.
+            </p>
+
+            <div class="hero-actions">
+                <div class="search">
+                    <span class="search-ico"></span>
+                    <input id="courseSearch" type="text" placeholder="Cerca corso, docente o major…"
+                        autocomplete="off" />
+                </div>
+
+                <div class="select-wrap">
+                    <select id="courseSort" aria-label="Ordina corsi">
+                        <option value="nameAsc">Ordina: Nome (A→Z)</option>
+                        <option value="nameDesc" selected>Ordina: Nome (Z→A)</option>
+                        <option value="cfuDesc">Ordina: CFU (alto→basso)</option>
+                        <option value="cfuAsc">Ordina: CFU (basso→alto)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <aside class="hero-right">
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-title">Totale corsi</div>
+                    <div class="stat-badge" id="statTotalCourses">0</div>
+                </div>
+                <div class="stat-sub">Corsi associati al tuo profilo</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-title">Carico CFU</div>
+                    <div class="stat-badge" id="statTotalCfu">0</div>
+                </div>
+                <div class="stat-sub">Somma CFU dei corsi visibili</div>
+            </div>
+        </aside>
+    </section>
+
+    <!-- MAIN -->
+    <main class="main-grid">
+
+        <!-- COURSES -->
+        <section class="card courses-card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">I tuoi corsi</h2>
+                    <p class="card-sub">Nome, CFU, major e docente. Apri i dettagli per più info.</p>
+                </div>
+                <span class="pill" id="pillTotalCourses">Totali: 0</span>
+            </div>
+
+            <div class="card-body">
+
+                <!-- gestisci visibilità via JS -->
+                <div class="note" id="emptyCoursesNote" hidden>
+                    Nessun corso disponibile al momento.
+                </div>
+
+                <div id="courses" class="courses-grid">
+
+                    <!-- TEMPLATE: COURSE CARD -->
+                    <template id="courseCardTpl">
+                        <article class="course-card">
+                            <div class="course-accent"></div>
+
+                            <div class="course-head">
+                                <div class="course-head-left">
+                                    <h3 class="course-name">Nome corso</h3>
+
+                                    <div class="course-badges">
+                                        <span class="badge">
+                                            <span class="chip-ico"></span>
+                                            <span class="course-cfu">0 CFU</span>
+                                        </span>
+
+                                        <span class="badge badge-soft">
+                                            <span class="chip-ico purple"></span>
+                                            <span class="course-semester">—</span>
+                                        </span>
+
+                                        <span class="badge badge-soft">
+                                            <span class="chip-ico orange"></span>
+                                            <span class="course-prof">—</span>
+                                        </span>
+
+                                        <button class="btn btn-accent open-exams" style="padding: 9px 12px;"
+                                            type="button">
+                                            <span class="icon"></span> Visualizza Appelli
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="course-kpi">
+                                    <div class="k">
+                                        <div class="num course-students">0</div>
+                                        <div class="txt">Iscritti</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <details class="course-details">
+                                <summary>
+                                    <span class="summary-left">
+                                        <span class="chev"></span>
+                                        Dettagli
+                                    </span>
+                                </summary>
+
+                                <div class="details-body">
+
+                                    <div class="details-row">
+                                        <div class="details-label">Docente</div>
+                                        <div class="details-value course-prof-2">—</div>
+                                    </div>
+
+                                    <div class="details-row">
+                                        <div class="details-label">Semestre</div>
+                                        <div class="details-value">
+                                            <span class="course-semester-2">—</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="details-row">
+                                        <div class="details-label">Percorso</div>
+                                        <div class="details-value course-majors">
+                                            —
+                                        </div>
+                                    </div>
+
+                                    <div class="details-row">
+                                        <div class="details-label">Iscritti</div>
+                                        <div class="details-value">
+                                            <span class="course-students-2">0</span>
+                                            <span class="muted">totali</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- EXAMS BLOCK: inizialmente nascosto -->
+                                    <div class="exam-block" hidden>
+
+                                        <div class="exam-head">
+                                            <div class="details-label">Appelli disponibili</div>
+                                            <span class="mini-pill exam-count">0</span>
+                                        </div>
+
+                                        <div class="exam-list"></div>
+
+                                        <div class="note exam-empty" style="margin-top:10px;" hidden>
+                                            Nessun appello disponibile.
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </details>
+                        </article>
+                    </template>
+                </div>
+            </div>
+        </section>
+
+        <!-- SIDE -->
+        <aside class="side-col">
+            <section class="card mini side-card">
+                <h3>Tips</h3>
+                <p class="note">
+                    Usa la sezione <strong>Dettagli</strong> per vedere percorso, semestre e iscritti.
+                    <br>Gli appelli compaiono solo alla selezione del bottone
+                    <strong>Visualizza Appelli</strong>
+                </p>
+            </section>
+
+            <section class="card mini side-card">
+                <h3>Stato</h3>
+                <div class="kpi">
+                    <div class="box">
+                        <div class="num" id="sideTotalCourses">0</div>
+                        <div class="txt">Corsi</div>
+                    </div>
+                    <div class="box">
+                        <div class="num" id="sideTotalCfu">0</div>
+                        <div class="txt">CFU totali</div>
+                    </div>
+                </div>
+            </section>
+        </aside>
+
+    </main>
+</div>

@@ -11,6 +11,7 @@ public class SortUtility {
 
     public static final String DEFAULT_SORT = "student.number";
     public static final String DEFAULT_DIR = "asc";
+    public static final String SORT_DIR_DESC = "desc";
 
     public static final Set<String> ALLOWED_SORTS = Set.of(
             "student.number",

@@ -65,6 +65,10 @@ public class CourseDTO {
         return students;
     }
 
+    public Map<MajorDTO, Integer> getMajorAndYear() {
+        return majorAndYear;
+    }
+
     public List<MajorDTO> getMajors() {
         return majorAndYear.keySet().stream().toList();
     }
