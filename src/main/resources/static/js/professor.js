@@ -1,9 +1,13 @@
 import { renderHome } from "./features/professor/home.js";
 import { renderIscritti } from "./features/professor/iscritti.js";
+import { renderReports } from "./features/professor/reports.js";
+import { renderReport } from "./features/professor/report.js";
 
 const routes = {
   home: renderHome,
-  iscritti: renderIscritti
+  iscritti: renderIscritti,
+  reports: renderReports,
+  report: renderReport
 };
 
 export function startRouter({ root = document.getElementById("app") } = {}) {

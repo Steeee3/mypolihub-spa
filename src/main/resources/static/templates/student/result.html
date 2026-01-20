@@ -1,0 +1,170 @@
+<div class="container home-shell" id="mainContainer">
+
+    <div class="note note-danger" id="pageError" hidden>
+        <strong>Errore:</strong>
+        <span id="pageErrorText">Messaggio di errore…</span>
+    </div>
+
+    <div class="note note-success" id="pageSuccess" hidden>
+        <span id="pageSuccessText">Operazione completata.</span>
+    </div>
+
+    <section class="card" style="margin-top:18px;">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Esito appello</h2>
+                <p class="card-sub">Visualizza il risultato pubblicato dal docente per questo appello.</p>
+            </div>
+
+            <div class="header-actions">
+                <span class="pill" id="examIdPill">Appello: —</span>
+            </div>
+        </div>
+
+        <div class="card-body">
+
+            <div class="note" id="notPublishedNote" hidden>
+                <strong id="notPublishedTitle">Voto non ancora definito.</strong>
+                Il docente non ha ancora pubblicato il risultato per questo appello.
+            </div>
+
+            <div id="publishedWrap" hidden>
+
+                <div class="grid" style="grid-template-columns: 1.1fr .9fr;">
+                    <div class="card mini">
+                        <h3>Dati studente</h3>
+                        <div class="divider"></div>
+
+                        <div class="details-row">
+                            <div class="details-label">Matricola</div>
+                            <div class="details-value mono" id="studentNumber">—</div>
+                        </div>
+
+                        <div class="details-row">
+                            <div class="details-label">Nome</div>
+                            <div class="details-value" id="studentFullName">—</div>
+                        </div>
+
+                        <div class="details-row">
+                            <div class="details-label">Email</div>
+                            <div class="details-value mono" id="studentEmail">—</div>
+                        </div>
+                    </div>
+
+                    <div class="card mini">
+                        <h3>Dati appello</h3>
+                        <div class="divider"></div>
+
+                        <div class="details-row">
+                            <div class="details-label">Corso</div>
+                            <div class="details-value" id="courseName">—</div>
+                        </div>
+
+                        <div class="details-row">
+                            <div class="details-label">CFU</div>
+                            <div class="details-value" id="courseCfu">—</div>
+                        </div>
+
+                        <div class="details-row">
+                            <div class="details-label">Data</div>
+                            <div class="details-value" id="examDate">—</div>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="card" style="margin-top:18px;">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">Valutazione</h2>
+                            <p class="card-sub">Stato e risultato associati alla tua iscrizione.</p>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-wrap" style="max-height:none;">
+                            <table class="table" style="min-width: 640px;">
+                                <thead>
+                                    <tr>
+                                        <th style="width:42%;">Stato valutazione</th>
+                                        <th style="width:38%;">Risultato</th>
+                                        <th class="th-actions" style="text-align:right;">Azione</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <span class="tag tag-status" id="statusTag" data-status="">
+                                                —
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <span class="tag tag-result" id="resultTag" data-result="">
+                                                —
+                                            </span>
+                                        </td>
+
+                                        <td class="actions-cell" style="text-align:right;">
+                                            <div id="declineDragWrap" hidden>
+                                                <div class="decline-dnd">
+                                                    <div class="decline-draggable" id="declineDraggable"
+                                                        draggable="true">
+                                                        <div class="decline-title">Trascina per rifiutare</div>
+                                                        <div class="decline-sub" id="declineDraggableText">—</div>
+                                                    </div>
+
+                                                    <div class="decline-trash" id="trashDropzone" aria-label="Cestino"
+                                                        role="button" tabindex="0">
+                                                        <span class="trash-ico" aria-hidden="true"></span>
+                                                        <div class="trash-label">Cestino</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <span class="muted" id="declineMuted" hidden>—</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="note" style="margin-top:12px;" id="cannotDeclineNote" hidden>
+                            Il voto non è rifiutabile in base allo stato o al tipo di risultato.
+                        </div>
+
+                    </div>
+                </section>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- MODAL CONFERMA RIFIUTO -->
+    <div class="modal-overlay" id="declineModal" hidden>
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="declineModalTitle">
+            <div class="modal-head">
+                <div class="modal-head-left">
+                    <div class="modal-title" id="declineModalTitle">Conferma rifiuto</div>
+                    <div class="modal-sub">Questa operazione non è annullabile.</div>
+                </div>
+
+                <div class="modal-head-right">
+                    <button class="btn btn-ghost" type="button" id="btnDeclineCancel">CANCELLA</button>
+                    <button class="btn btn-danger" type="button" id="btnDeclineConfirm">CONFERMA</button>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <div class="note">
+                    Stai per rifiutare il seguente esito:
+                    <div class="divider" style="margin:10px 0;"></div>
+                    <div class="mono" id="declineModalText">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

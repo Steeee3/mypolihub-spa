@@ -16,3 +16,16 @@ export async function getAllValidResults() {
 export function clearValidResultsCache() {
     cachedValidResults = null;
 }
+
+export async function getResultByExamId(examId) {
+    return await apiFetch(`/api/student/result?examId=${encodeURIComponent(examId)}`);
+}
+
+export async function declineResult(examId) {
+    await apiFetch(
+        `/api/student/result/${encodeURIComponent(examId)}/decline`,
+        {
+            method: "PATCH"
+        }
+    );
+}

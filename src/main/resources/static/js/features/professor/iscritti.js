@@ -683,7 +683,7 @@ function canEditRegistration(r) {
 }
 
 // -----------------------------
-// Small helpers
+// Small utilities
 // -----------------------------
 
 function cloneTemplate(tpl) {

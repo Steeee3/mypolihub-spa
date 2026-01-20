@@ -1,0 +1,184 @@
+#mainContainer .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+#mainContainer .table {
+    table-layout: auto;
+    min-width: 640px;
+}
+
+#mainContainer .table th,
+#mainContainer .table td {
+    vertical-align: middle;
+}
+
+#mainContainer .table td.actions-cell {
+    overflow: visible;
+}
+
+#declineDragWrap {
+    width: 100%;
+}
+
+.decline-dnd {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    width: 100%;
+    max-width: 560px;
+    margin-left: auto;
+    box-sizing: border-box;
+}
+
+.decline-draggable {
+    flex: 1 1 auto;
+    min-width: 240px;
+    max-width: 420px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: rgba(0, 0, 0, 0.03);
+    cursor: grab;
+    user-select: none;
+    box-sizing: border-box;
+}
+
+.decline-draggable:active {
+    cursor: grabbing;
+}
+
+.decline-draggable.is-dragging {
+    opacity: 0.75;
+    transform: scale(0.985);
+}
+
+.decline-title {
+    font-weight: 800;
+    font-size: 12px;
+    line-height: 1.2;
+}
+
+.decline-sub {
+    margin-top: 4px;
+    font-size: 12px;
+    opacity: 0.85;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.decline-trash {
+    flex: 0 0 96px;
+    height: 64px;
+    border-radius: 14px;
+    border: 1px dashed rgba(0, 0, 0, 0.20);
+    background: rgba(0, 0, 0, 0.02);
+    display: grid;
+    place-items: center;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.decline-trash .trash-label {
+    margin-top: 6px;
+    font-size: 11px;
+    opacity: 0.85;
+}
+
+.decline-trash.is-armed {
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.25);
+}
+
+.decline-trash.is-over {
+    border-style: solid;
+    border-color: rgba(255, 80, 80, 0.65);
+    background: rgba(255, 80, 80, 0.10);
+    box-shadow: 0 0 0 3px rgba(255, 80, 80, 0.12);
+}
+
+.trash-ico {
+    width: 30px;
+    height: 30px;
+    display: inline-block;
+    background-image: url("/img/trash-ico.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+}
+
+@media (prefers-color-scheme: dark) {
+    .decline-draggable {
+        border-color: rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    .decline-trash {
+        border-color: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .decline-trash.is-armed {
+        border-color: rgba(255, 255, 255, 0.22);
+    }
+
+    .trash-ico {
+        filter: invert(1);
+    }
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: grid;
+    place-items: center;
+    z-index: 9999;
+}
+
+.modal-card {
+    width: min(720px, calc(100% - 24px));
+}
+
+@media (max-width: 720px) {
+    #publishedWrap .grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    #mainContainer .table {
+        min-width: 520px;
+    }
+
+    .decline-dnd {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        max-width: 100%;
+        margin-left: 0;
+    }
+
+    .decline-draggable {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .decline-trash {
+        flex: 0 0 auto;
+        width: 100%;
+        height: 62px;
+    }
+
+    .decline-sub {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+    }
+}
+
+@media (max-width: 420px) {
+    #mainContainer .table {
+        min-width: 480px;
+    }
+}

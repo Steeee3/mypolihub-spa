@@ -1,0 +1,189 @@
+<div class="container home-shell" id="mainContainer">
+
+    <div class="note note-danger" id="pageError" hidden>
+        <strong>Errore:</strong>
+        <span id="pageErrorText">Messaggio di errore…</span>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-left">
+            <div class="hero-pill">
+                <span class="dot"></span>
+                <span id="heroRoleText">Dashboard</span>
+            </div>
+
+            <h2 class="hero-title">Verbali</h2>
+            <p class="hero-sub">
+                Seleziona un corso e premi <strong>Mostra verbali</strong>: i verbali verranno caricati e mostrati
+                <strong>solo sotto il corso selezionato</strong>.
+            </p>
+        </div>
+
+        <aside class="hero-right">
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-title">Totale corsi</div>
+                    <div class="stat-badge" id="totalCoursesBadge">0</div>
+                </div>
+                <div class="stat-sub">Corsi associati al tuo profilo</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-title">Verbali caricati</div>
+                    <div class="stat-badge" id="totalReportsBadge">0</div>
+                </div>
+                <div class="stat-sub">
+                    Mostrati solo quando selezioni un corso
+                </div>
+            </div>
+        </aside>
+    </section>
+
+    <!-- MAIN -->
+    <main class="main-grid">
+
+        <!-- COURSES -->
+        <section class="card courses-card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Verbali per corso</h2>
+                    <p class="card-sub">
+                        Premi “Mostra verbali” su un corso per caricare e visualizzare la lista.
+                    </p>
+                </div>
+
+                <span class="pill" id="coursesPill">Corsi: 0</span>
+            </div>
+
+            <div class="card-body">
+                <div class="note" id="noCoursesNote" hidden>
+                    Nessun corso disponibile.
+                </div>
+
+                <div id="coursesGrid" class="courses-grid" hidden></div>
+
+                <template id="courseCardTpl">
+                    <article class="course-card" data-course-card>
+                        <div class="course-accent"></div>
+
+                        <div class="course-head">
+                            <div class="course-head-left">
+                                <h3 class="course-name" data-course-name>Nome corso</h3>
+
+                                <div class="course-badges">
+                                    <span class="badge">
+                                        <span class="chip-ico"></span>
+                                        <span data-course-cfu>0 CFU</span>
+                                    </span>
+
+                                    <span class="badge badge-soft">
+                                        <span class="chip-ico purple"></span>
+                                        <span data-course-semester>—</span>
+                                    </span>
+
+                                    <span class="badge badge-soft">
+                                        <span class="chip-ico orange"></span>
+                                        <span data-course-professor>—</span>
+                                    </span>
+
+                                    <button class="btn btn-accent" style="padding: 9px 12px;" type="button"
+                                        data-btn-show>
+                                        <span class="icon"></span> Mostra Verbali
+                                    </button>
+
+                                    <button class="btn btn-ghost" style="padding: 9px 12px;" type="button"
+                                        data-btn-close hidden>
+                                        Chiudi
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="course-kpi">
+                                <div class="k">
+                                    <div class="num" data-course-reports-count>0</div>
+                                    <div class="txt">Verbali</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <details class="course-details" data-course-details>
+                            <summary>
+                                <span class="summary-left">
+                                    <span class="chev"></span>
+                                    Dettagli
+                                </span>
+                            </summary>
+
+                            <div class="details-body">
+                                <div class="details-row">
+                                    <div class="details-label">Docente</div>
+                                    <div class="details-value" data-details-professor>—</div>
+                                </div>
+
+                                <div class="details-row" data-details-majors-row hidden>
+                                    <div class="details-label">Percorso</div>
+                                    <div class="details-value" data-details-majors></div>
+                                </div>
+
+                                <div class="exam-block">
+                                    <div class="exam-head">
+                                        <div class="details-label">Verbali disponibili</div>
+                                        <span class="mini-pill" data-mini-pill>0</span>
+                                    </div>
+
+                                    <div class="note" data-hint>
+                                        Premi “Mostra verbali” per caricare la lista.
+                                    </div>
+
+                                    <div data-reports-area hidden>
+                                        <div class="exam-list" data-reports-list></div>
+
+                                        <div class="note" style="margin-top:10px;" data-no-reports hidden>
+                                            Nessun verbale disponibile per questo corso.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </details>
+                    </article>
+                </template>
+
+                <template id="reportItemTpl">
+                    <a class="exam-item" data-report-link>
+                        <div class="exam-date" data-report-date>—</div>
+                        <div class="exam-time" data-report-time>—</div>
+                        <div class="exam-cta" data-report-cta>—</div>
+                    </a>
+                </template>
+            </div>
+        </section>
+
+        <!-- SIDE -->
+        <aside class="side-col">
+            <section class="card mini side-card">
+                <h3>Come funziona</h3>
+                <p class="note">
+                    Seleziona un corso → premi “Mostra verbali” → i verbali vengono caricati solo per quel corso.
+                </p>
+            </section>
+
+            <section class="card mini side-card">
+                <h3>Stato</h3>
+                <div class="kpi">
+                    <div class="box">
+                        <div class="num" id="sideCoursesNum">0</div>
+                        <div class="txt">Corsi</div>
+                    </div>
+                    <div class="box">
+                        <div class="num" id="sideReportsNum">0</div>
+                        <div class="txt">Caricati</div>
+                    </div>
+                </div>
+            </section>
+        </aside>
+
+    </main>
+
+</div>

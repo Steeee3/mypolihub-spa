@@ -1,0 +1,145 @@
+<div class="container home-shell" id="mainContainer">
+
+    <div class="note note-danger" id="pageError" hidden>
+        <strong>Errore:</strong>
+        <span id="pageErrorText">Messaggio di errore…</span>
+    </div>
+
+    <!-- INFO VERBALE -->
+    <section class="card" style="margin-top:18px;" id="reportInfoCard" hidden>
+        <div class="card-header">
+            <div>
+                <h2 class="card-title" id="reportTitle">Verbale #—</h2>
+                <p class="card-sub">
+                    Documento generato dopo la verbalizzazione.
+                </p>
+            </div>
+
+            <div class="header-actions">
+                <span class="pill" id="verbalizedCountPill">Appelli verbalizzati: 0</span>
+
+                <span class="pill" id="createdPill" hidden>Creato: —</span>
+
+                <a class="btn btn-ghost" id="backToExamLink" href="#reports" hidden>
+                    Torna all'appello
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="grid" style="grid-template-columns: 1.1fr .9fr;">
+                <div class="card mini">
+                    <h3>Dati del corso</h3>
+                    <div class="divider"></div>
+
+                    <div class="details-row">
+                        <div class="details-label">Nome</div>
+                        <div class="details-value" id="courseName">—</div>
+                    </div>
+
+                    <div class="details-row">
+                        <div class="details-label">CFU</div>
+                        <div class="details-value" id="courseCfu">—</div>
+                    </div>
+
+                    <div class="details-row">
+                        <div class="details-label">Percorso</div>
+                        <div class="details-value">
+                            <div class="majors-list" id="courseMajors"></div>
+                            <div class="muted" id="courseMajorsEmpty">—</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mini">
+                    <h3>Dati dell'esame</h3>
+                    <div class="divider"></div>
+
+                    <div class="details-row">
+                        <div class="details-label">Data</div>
+                        <div class="details-value" id="examDate">—</div>
+                    </div>
+
+                    <div class="details-row">
+                        <div class="details-label">Righe nel verbale</div>
+                        <div class="details-value" id="rowsCount">0</div>
+                    </div>
+
+                    <div class="details-row">
+                        <div class="details-label">Data di creazione</div>
+                        <div class="details-value" id="createdAt">—</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TABELLA -->
+    <section class="card" style="margin-top:18px;" id="tableCard" hidden>
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Studenti verbalizzati</h2>
+                <p class="card-sub">
+                    Clicca un header per ordinare. Click ripetuto sullo stesso header inverte l'ordine.
+                </p>
+            </div>
+
+            <div class="header-actions">
+                <span class="pill" id="registrationsTotalPill">Totali: 0</span>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="note" id="emptyRegistrationsNote" hidden>
+                Nessuna riga associata a questo verbale.
+            </div>
+
+            <div class="table-wrap" id="tableWrap" hidden>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="is-sortable" data-sort-key="student.number">
+                                <button type="button" class="th-link">
+                                    Matricola <span class="sort-ico"></span>
+                                </button>
+                            </th>
+
+                            <th class="is-sortable" data-sort-key="student.surname">
+                                <button type="button" class="th-link">
+                                    Cognome <span class="sort-ico"></span>
+                                </button>
+                            </th>
+
+                            <th class="is-sortable" data-sort-key="student.name">
+                                <button type="button" class="th-link">
+                                    Nome <span class="sort-ico"></span>
+                                </button>
+                            </th>
+
+                            <th class="is-sortable" data-sort-key="student.email">
+                                <button type="button" class="th-link">
+                                    Email <span class="sort-ico"></span>
+                                </button>
+                            </th>
+
+                            <th class="is-sortable" data-sort-key="student.major">
+                                <button type="button" class="th-link">
+                                    Corso di studi <span class="sort-ico"></span>
+                                </button>
+                            </th>
+
+                            <th class="is-sortable" data-sort-key="result">
+                                <button type="button" class="th-link">
+                                    Risultato <span class="sort-ico"></span>
+                                </button>
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="registrationsBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+</div>

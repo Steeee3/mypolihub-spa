@@ -356,7 +356,7 @@ function renderExamLink(row, examId, role) {
     const link = row.querySelector(".exam-item");
     link.href = isProfessor(role)
         ? `#iscritti?examId=${encodeURIComponent(examId)}`
-        : `#esito?examId=${encodeURIComponent(examId)}`;
+        : `#result?examId=${encodeURIComponent(examId)}`;
 }
 
 // -----------------------------
