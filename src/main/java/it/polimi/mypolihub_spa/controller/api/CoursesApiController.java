@@ -20,6 +20,10 @@ public class CoursesApiController {
 
     @Autowired
     private CourseService courseService;
+
+    // -----------------------------
+	// Professor operations
+	// -----------------------------
     
     @GetMapping("/professor/courses")
     public List<CourseDTO> getCoursesForProfessor(
@@ -34,6 +38,10 @@ public class CoursesApiController {
             return courseService.findCoursesByProfessorIdOrderByNameAsc(principal.getId());
         }
     }
+
+    // -----------------------------
+	// Student operations
+	// -----------------------------
 
     @GetMapping("/student/courses")
     public List<CourseDTO> getCoursesForStudent(@AuthenticationPrincipal CustomUserDetails principal) {

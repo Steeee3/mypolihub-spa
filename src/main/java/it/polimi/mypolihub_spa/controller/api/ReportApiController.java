@@ -21,6 +21,10 @@ public class ReportApiController {
 
     @Autowired
     private ReportService reportService;
+
+    // -----------------------------
+	// Professor operations
+	// -----------------------------
     
     @GetMapping("/professor/reports")
     public List<ReportDTO> getAllReportsByCourseId(@RequestParam Integer courseId, @AuthenticationPrincipal CustomUserDetails principal) {

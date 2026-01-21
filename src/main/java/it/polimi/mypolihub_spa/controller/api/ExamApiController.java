@@ -11,8 +11,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import it.polimi.mypolihub_spa.DTO.ExamDTO;
+import it.polimi.mypolihub_spa.DTO.RegistrationDTO;
 import it.polimi.mypolihub_spa.security.CustomUserDetails;
 import it.polimi.mypolihub_spa.service.ExamService;
+import it.polimi.mypolihub_spa.utils.SortUtility;
+import it.polimi.mypolihub_spa.utils.SortUtility.SortKey;
 
 @RestController
 @RequestMapping("/api")
@@ -25,6 +28,24 @@ public class ExamApiController {
     public List<ExamDTO> getAllExams(@RequestParam(name = "courseId", required = false) Integer courseId) {
         return examService.getExamsForCourse(courseId);
     }
+
+    // -----------------------------
+	// Professor operations
+	// -----------------------------
+
+    @GetMapping("/professor/exam")
+    public List<RegistrationDTO> getRegistrationsByExamId(@RequestParam Integer examId,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+
+        SortKey sortKey = SortUtility.getValidSortKeyFrom(SortUtility.DEFAULT_SORT);
+        String sortDir = SortUtility.getValidSortDirFrom(SortUtility.DEFAULT_DIR);
+
+        return examService.getStudentsByExamIdSortedBy(principal.getId(), examId, sortKey.jpa(), sortDir);
+    }
+
+    // -----------------------------
+	// Student operations
+	// -----------------------------
 
     @GetMapping("/student/exams/registered")
     public Set<Integer> getExamsWhereStudentIsRegistered(@RequestParam(name = "courseId", required = false) Integer courseId,

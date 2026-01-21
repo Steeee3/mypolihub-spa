@@ -9,7 +9,7 @@ import it.polimi.mypolihub_spa.entity.Role;
 @Controller
 public class AppController {
 
-    @GetMapping("/app")
+    @GetMapping({"/app", "/", "/home"})
     public String initRoute(Authentication auth) {
         Role role = Role.from(auth);
 
