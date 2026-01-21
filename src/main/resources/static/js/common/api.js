@@ -33,19 +33,20 @@ export async function apiFetch(url, options = {}) {
         credentials: "same-origin",
     });
 
-    if (res.status === 401 || res.status === 403) {
-        window.location.href = "/login";
-        return;
-    }
-
     const contentType = res.headers.get("content-type") || "";
     const payload = contentType.includes("application/json")
         ? await res.json().catch(() => null)
         : await res.text().catch(() => null);
 
+    const messageFrom = (p) => (p && typeof p === "object" ? p.message : p) || "Errore server";
+
+    if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+    }
+
     if (!res.ok) {
-        const msg = (payload && payload.message) ? payload.message : (payload || "Errore server");
-        throw new Error(msg);
+        throw new Error(messageFrom(payload));
     }
 
     return payload;

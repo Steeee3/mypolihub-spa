@@ -6,6 +6,8 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,8 +32,8 @@ public class ExamApiController {
     }
 
     // -----------------------------
-	// Professor operations
-	// -----------------------------
+    // Professor operations
+    // -----------------------------
 
     @GetMapping("/professor/exam")
     public List<RegistrationDTO> getRegistrationsByExamId(@RequestParam Integer examId,
@@ -44,12 +46,20 @@ public class ExamApiController {
     }
 
     // -----------------------------
-	// Student operations
-	// -----------------------------
+    // Student operations
+    // -----------------------------
 
     @GetMapping("/student/exams/registered")
-    public Set<Integer> getExamsWhereStudentIsRegistered(@RequestParam(name = "courseId", required = false) Integer courseId,
+    public Set<Integer> getExamsWhereStudentIsRegistered(
+            @RequestParam(name = "courseId", required = false) Integer courseId,
             @AuthenticationPrincipal CustomUserDetails principal) {
         return examService.getRegisteredExamIds(principal.getId(), courseId);
+    }
+
+    @PostMapping("/student/exam/{examId}/register")
+    public void registerForExam(
+            @PathVariable Integer examId,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        examService.registerStudentForExam(principal.getId(), examId);
     }
 }

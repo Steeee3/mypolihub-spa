@@ -10,7 +10,7 @@ export async function getExamsWhereStudentIsRegistered(courseId) {
 
 export async function registerToExam(examId, courseId) {
     await apiFetch(
-        `/student/exam/${encodeURIComponent(examId)}/register`,
+        `/api/student/exam/${encodeURIComponent(examId)}/register`,
         {
             method: "POST",
             body: JSON.stringify(courseId)
