@@ -6,6 +6,48 @@ import { ensurePageStyle } from "../../utils/pageStyle.js";
 import { getReportById } from "../../services/reportsApi.js";
 import { getAllValidResults } from "../../services/resultApi.js";
 
+import {
+    bindSortingHeaders,
+    sortBySpec,
+    createResultRankById,
+    getResultRank,
+} from "../../utils/sortingTable.js";
+
+import {
+    normalize,
+    setText
+} from "../../utils/domUtils.js";
+import { formatDateTime, formatMajor } from "../../utils/formatters.js";
+
+/**
+ * VERBALE PAGE — file sections overview
+ *
+ ** - Entry point
+ *   Bootstraps the page: validates reportId from query, mounts template + header,
+ *   creates state, loads data, renders UI, and binds table sorting.
+ *
+ ** - State + UI
+ *   Central page state (reportId, user, current sort, loaded report/registrations/results,
+ *   sorting context) and a single place to collect all DOM element references.
+ *
+ ** - Load + render
+ *   Fetches the report and valid results in parallel, prepares registrations list + sorting ranks,
+ *   then renders either the full page or the empty/error state.
+ *
+ ** - Page rendering
+ *   Renders top header info (title, created timestamp, back-to-exam link),
+ *   renders summary/info cards (course + exam + counts), renders majors badges,
+ *   and renders the registrations table (or empty table view).
+ *
+ ** - Sort
+ *   Builds the sorting context (result ranking), binds sortable headers,
+ *   defines sortable values per column, and applies sortBySpec with a stable fallback.
+ *
+ ** - Errors
+ *   Small helpers to show/hide the page-level error banner/message.
+ */
+
+
 // -----------------------------
 // Entry point
 // -----------------------------
@@ -123,7 +165,7 @@ function renderPage(state) {
     renderHeaderInfo(state, report, regs.length);
     renderInfoCards(state, report, regs.length);
 
-    state.ui.totalPill && (state.ui.totalPill.textContent = `Totali: ${regs.length}`);
+    state.ui.totalPill && (setText(state.ui.totalPill, `Totali: ${regs.length}`));
 
     if (regs.length === 0) {
         renderEmptyTable(state);
@@ -131,7 +173,6 @@ function renderPage(state) {
     }
 
     renderTable(state);
-    renderSortIndicators(state);
 }
 
 function renderEmpty(state) {
@@ -145,17 +186,14 @@ function renderEmptyTable(state) {
 }
 
 function renderHeaderInfo(state, report, count) {
-    if (state.ui.titleEl) state.ui.titleEl.textContent = `Verbale #${state.reportId}`;
-
-    if (state.ui.verbalizedCountPill) {
-        state.ui.verbalizedCountPill.textContent = `Appelli verbalizzati: ${count}`;
-    }
+    setText(state.ui.titleEl, `Verbale #${state.reportId}`);
+    setText(state.ui.verbalizedCountPill, `Appelli verbalizzati: ${count}`);
 
     if (state.ui.createdPill) {
         state.ui.createdPill.hidden = !report?.timestamp;
-        state.ui.createdPill.textContent = report?.timestamp
+        setText(state.ui.createdPill, report?.timestamp
             ? `Creato: ${formatDateTime(report.timestamp)}`
-            : "Creato: —";
+            : "Creato: —");
     }
 
     const examId = report?.exam?.id;
@@ -170,14 +208,14 @@ function renderHeaderInfo(state, report, count) {
 function renderInfoCards(state, report, rowsCount) {
     const course = report?.exam?.course;
 
-    setTextById(state.ui.courseName, course?.name || "—");
-    setTextById(state.ui.courseCfu, course?.cfu != null ? String(course.cfu) : "—");
+    setText(state.ui.courseName, course?.name || "—");
+    setText(state.ui.courseCfu, course?.cfu != null ? String(course.cfu) : "—");
 
     renderMajorsBadges(state, course?.majors);
 
-    setTextById(state.ui.examDate, report?.exam?.date ? formatDateTime(report.exam.date) : "—");
-    setTextById(state.ui.rowsCount, String(rowsCount));
-    setTextById(state.ui.createdAt, report?.timestamp ? formatDateTime(report.timestamp) : "—");
+    setText(state.ui.examDate, report?.exam?.date ? formatDateTime(report.exam.date) : "—");
+    setText(state.ui.rowsCount, String(rowsCount));
+    setText(state.ui.createdAt, report?.timestamp ? formatDateTime(report.timestamp) : "—");
 }
 
 function renderMajorsBadges(state, majors) {
@@ -198,7 +236,7 @@ function renderMajorsBadges(state, majors) {
     for (const m of majors) {
         const badge = document.createElement("span");
         badge.className = "badge badge-soft";
-        badge.textContent = `${m?.name || "—"} · ${m?.degreeLevel?.name || "—"}`;
+        setText(badge, `${m?.name || "—"} · ${m?.degreeLevel?.name || "—"}`);
         box.appendChild(badge);
     }
 }
@@ -236,7 +274,7 @@ function buildRow(r) {
     resultSpan.className = "tag tag-result";
     resultSpan.classList.toggle("is-empty", resultValue.length === 0);
     resultSpan.dataset.result = normalize(resultValue);
-    resultSpan.textContent = resultValue.length ? resultValue : "—";
+    setText(resultSpan, resultValue.length ? resultValue : "—");
     resultTd.appendChild(resultSpan);
 
     tr.appendChild(number);
@@ -252,118 +290,49 @@ function buildRow(r) {
 function td(className, text) {
     const el = document.createElement("td");
     if (className) el.className = className;
-    el.textContent = text;
+    setText(el, text);
     return el;
 }
 
 // -----------------------------
-// Sorting (like iscritti)
+// Sort
 // -----------------------------
 
+function createSortingContext(validResults) {
+    return {
+        resultRankById: createResultRankById(validResults),
+    };
+}
+
 function bindSorting(state) {
-    const headers = document.querySelectorAll("th.is-sortable");
-
-    headers.forEach((th) => {
-        const key = th.dataset.sortKey;
-        const btn = th.querySelector("button.th-link");
-        if (!btn || !key) return;
-
-        btn.addEventListener("click", () => {
-            toggleSort(state, key);
+    bindSortingHeaders({
+        root: document,
+        sort: state.sort,
+        onChange: () => {
             renderTable(state);
-            renderSortIndicators(state);
-        });
+        },
     });
 }
 
-function toggleSort(state, key) {
-    if (state.sort.key === key) {
-        state.sort.dir = state.sort.dir === "asc" ? "desc" : "asc";
-        return;
-    }
-    state.sort.key = key;
-    state.sort.dir = "asc";
-}
-
-function renderSortIndicators(state) {
-    const headers = document.querySelectorAll("th.is-sortable");
-
-    headers.forEach((th) => {
-        const key = th.dataset.sortKey;
-        const ico = th.querySelector(".sort-ico");
-
-        th.classList.remove("is-active");
-        ico?.classList.remove("asc", "desc");
-
-        if (key !== state.sort.key) return;
-
-        th.classList.add("is-active");
-        ico?.classList.add(state.sort.dir === "asc" ? "asc" : "desc");
-    });
-}
-
-function sortRegistrations(registrations, sort, sorting) {
-    const dir = sort.dir === "desc" ? -1 : 1;
-
-    return [...(registrations || [])].sort((a, b) => {
-        const va = getSortValue(a, sort.key, sorting);
-        const vb = getSortValue(b, sort.key, sorting);
-
-        const cmp = compareValues(va, vb) * dir;
-        if (cmp !== 0) return cmp;
-
-        const na = Number(a?.student?.number) || 0;
-        const nb = Number(b?.student?.number) || 0;
-        return na - nb;
-    });
-}
-
-function getSortValue(r, key, sorting) {
+function getSortValueReport(r, key, sorting) {
     if (key === "student.number") return Number(r?.student?.number) || 0;
     if (key === "student.surname") return r?.student?.surname || "";
     if (key === "student.name") return r?.student?.name || "";
     if (key === "student.email") return r?.student?.email || "";
     if (key === "student.major") return formatMajor(r?.student?.major);
 
-    if (key === "result") return getResultRank(r?.result, sorting);
+    if (key === "result") return getResultRank(r?.result, sorting.resultRankById, normalize);
 
     return "";
 }
 
-function compareValues(a, b) {
-    if (typeof a === "number" && typeof b === "number") return a - b;
-    return String(a).localeCompare(String(b), "it", { sensitivity: "base" });
-}
-
-function createSortingContext(validResults) {
-    return {
-        resultRankById: buildResultRankById(validResults),
-    };
-}
-
-function buildResultRankById(results) {
-    const map = new Map();
-    let rank = 1;
-
-    for (const res of results || []) {
-        if (res?.id == null) continue;
-        map.set(Number(res.id), rank++);
-    }
-    return map;
-}
-
-function getResultRank(result, sorting) {
-    if (!result) return 0;
-
-    const rawValue = String(result.value || "").trim();
-    const isEmptyValue = rawValue.length === 0 || normalize(rawValue) === "<vuoto>";
-    if (isEmptyValue) return 0;
-
-    const id = result.id != null ? Number(result.id) : null;
-    if (id == null) return Number.MAX_SAFE_INTEGER;
-
-    const rank = sorting.resultRankById.get(id);
-    return rank != null ? rank : Number.MAX_SAFE_INTEGER;
+function sortRegistrations(registrations, sort, sorting) {
+    return sortBySpec(
+        registrations,
+        sort,
+        (r, key) => getSortValueReport(r, key, sorting),
+        (a, b) => (Number(a?.student?.number) || 0) - (Number(b?.student?.number) || 0)
+    );
 }
 
 // -----------------------------
@@ -373,43 +342,11 @@ function getResultRank(result, sorting) {
 function showError(state, message) {
     if (!state.ui.pageError || !state.ui.pageErrorText) return;
     state.ui.pageError.hidden = false;
-    state.ui.pageErrorText.textContent = message;
+    setText(state.ui.pageErrorText, message);
 }
 
 function hideError(state) {
     if (!state.ui.pageError || !state.ui.pageErrorText) return;
     state.ui.pageError.hidden = true;
-    state.ui.pageErrorText.textContent = "";
-}
-
-// -----------------------------
-// Small utilities
-// -----------------------------
-
-function setTextById(el, value) {
-    if (!el) return;
-    el.textContent = String(value);
-}
-
-function normalize(s) {
-    return String(s || "").toLowerCase().trim();
-}
-
-function formatMajor(major) {
-    if (!major) return "";
-    const name = major.name || "";
-    const level = major.degreeLevel?.name || "";
-    return `${name} · ${level}`.trim();
-}
-
-function formatDateTime(iso) {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return "—";
-    return new Intl.DateTimeFormat("it-IT", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-    }).format(d);
+    setText(state.ui.pageErrorText, "");
 }

@@ -18,6 +18,23 @@
                 Seleziona un corso e premi <strong>Mostra verbali</strong>: i verbali verranno caricati e mostrati
                 <strong>solo sotto il corso selezionato</strong>.
             </p>
+
+            <div class="hero-actions">
+                <div class="search">
+                    <span class="search-ico"></span>
+                    <input id="courseSearch" type="text" placeholder="Cerca corso, docente o major…"
+                        autocomplete="off" />
+                </div>
+
+                <div class="select-wrap">
+                    <select id="courseSort" aria-label="Ordina corsi">
+                        <option value="nameAsc" selected>Ordina: Nome (A→Z)</option>
+                        <option value="nameDesc">Ordina: Nome (Z→A)</option>
+                        <option value="cfuDesc">Ordina: CFU (alto→basso)</option>
+                        <option value="cfuAsc">Ordina: CFU (basso→alto)</option>
+                    </select>
+                </div>
+            </div>
         </div>
 
         <aside class="hero-right">

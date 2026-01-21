@@ -5,6 +5,47 @@ import { ensurePageStyle } from "../../utils/pageStyle.js";
 
 import { getResultByExamId, declineResult } from "../../services/resultApi.js";
 
+import {
+    normalize,
+    setText
+} from "../../utils/domUtils.js";
+import { formatDateTime } from "../../utils/formatters.js";
+
+/**
+ * ESITO PAGE — file sections overview
+ *
+ ** - Entry point
+ *   Initializes the page: applies CSS, validates examId from query, mounts template + header,
+ *   creates state, loads data, renders UI, and binds the decline drag&drop workflow.
+ *
+ ** - State + UI
+ *   Central state (examId, user, fetched payload fields, modal state) and a single getUi()
+ *   that collects all DOM references used by the page.
+ *
+ ** - Load + render
+ *   Calls getResultByExamId, stores payload into state (registration/isPublished/canBeDeclined/message),
+ *   and renders either the "not published" view or the "published" view. Handles error fallback.
+ *
+ ** - Decline area (visibility + DnD text)
+ *   Shows/hides the decline UI based on canBeDeclined and builds the short draggable label.
+ *
+ ** - Drag & drop + modal confirm
+ *   Wires the drag source + trash dropzone interactions, opens a confirmation modal on drop,
+ *   and handles confirm/cancel/escape/outside-click behaviors.
+ *
+ ** - Decline texts
+ *   Builds user-facing strings for the draggable chip and the confirmation modal details line.
+ *
+ **- Tags rendering
+ *   Renders status/result “tags” and attaches normalized values into data-* for styling/logic.
+ *
+ **- Errors + success
+ *   Small helpers to show/hide page-level error and success banners/messages.
+ *
+ **- Small utilities
+ *   Generic helpers (setHidden, student full-name formatting).
+ */
+
 // -----------------------------
 // Entry point
 // -----------------------------
@@ -179,12 +220,12 @@ function renderDeclineArea(state) {
     setHidden(state.ui.declineMuted, canDecline);
     setHidden(state.ui.cannotDeclineNote, canDecline);
 
-    if (state.ui.declineMuted) state.ui.declineMuted.textContent = "—";
+    setText(state.ui.declineMuted, "—");
 }
 
 function renderDeclineDraggableText(state) {
     if (!state.ui.declineDraggableText) return;
-    state.ui.declineDraggableText.textContent = buildDeclineDraggableText(state);
+    setText(state.ui.declineDraggableText, buildDeclineDraggableText(state));
 }
 
 // -----------------------------
@@ -337,7 +378,7 @@ function renderStatusTag(state, status) {
     if (!el) return;
 
     const s = String(status || "").trim();
-    el.textContent = s.length ? s : "—";
+    setText(el, s.length ? s : "—");
     el.dataset.status = normalize(s);
 }
 
@@ -346,7 +387,7 @@ function renderResultTag(state, value) {
     if (!el) return;
 
     const v = String(value || "").trim();
-    el.textContent = v.length ? v : "—";
+    setText(el, v.length ? v : "—");
     el.dataset.result = normalize(v);
     el.classList.toggle("is-empty", v.length === 0);
 }
@@ -358,25 +399,25 @@ function renderResultTag(state, value) {
 function showError(state, message) {
     if (!state.ui.pageError || !state.ui.pageErrorText) return;
     state.ui.pageError.hidden = false;
-    state.ui.pageErrorText.textContent = message;
+    setText(state.ui.pageErrorText, message);
 }
 
 function hideError(state) {
     if (!state.ui.pageError || !state.ui.pageErrorText) return;
     state.ui.pageError.hidden = true;
-    state.ui.pageErrorText.textContent = "";
+    setText(state.ui.pageErrorText, "");
 }
 
 function showSuccess(state, message) {
     if (!state.ui.pageSuccess || !state.ui.pageSuccessText) return;
     state.ui.pageSuccess.hidden = false;
-    state.ui.pageSuccessText.textContent = message;
+    setText(state.ui.pageSuccessText, message);
 }
 
 function hideSuccess(state) {
     if (!state.ui.pageSuccess || !state.ui.pageSuccessText) return;
     state.ui.pageSuccess.hidden = true;
-    state.ui.pageSuccessText.textContent = "";
+    setText(state.ui.pageSuccessText, "");
 }
 
 // -----------------------------
@@ -388,31 +429,10 @@ function setHidden(el, hidden) {
     el.hidden = Boolean(hidden);
 }
 
-function setText(el, value) {
-    if (!el) return;
-    el.textContent = String(value);
-}
-
-function normalize(s) {
-    return String(s || "").toLowerCase().trim();
-}
-
 function formatStudentName(student) {
     if (!student) return "—";
     const surname = student.surname || "";
     const name = student.name || "";
     const full = `${surname} ${name}`.trim();
     return full.length ? full : "—";
-}
-
-function formatDateTime(iso) {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return "—";
-    return new Intl.DateTimeFormat("it-IT", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-    }).format(d);
 }

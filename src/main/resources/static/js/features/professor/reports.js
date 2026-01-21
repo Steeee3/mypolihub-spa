@@ -6,6 +6,59 @@ import { ensurePageStyle } from "../../utils/pageStyle.js";
 import { getProfessorCourses } from "../../services/coursesApi.js";
 import { getAllReportsByCourseId } from "../../services/reportsApi.js";
 
+import { setCourseCardDataset, bindCourseSearchAndSort } from "../../utils/courseSearchSort.js";
+import {
+    cloneTemplateFirstChild,
+    setText,
+    setTextIn
+} from "../../utils/domUtils.js";
+import { formatDate, formatTime, formatDateTime } from "../../utils/formatters.js";
+
+/**
+ * VERBALI PAGE — file sections overview
+ *
+ ** - Entry point
+ *   Bootstraps the page: loads user + template, initializes state/UI, loads courses,
+ *   renders the page, binds course search/sort, and optionally opens a course/report from URL query.
+ *
+ ** - State + UI
+ *   Defines the page state (courses, cached reports, open/selected course, visible courses count)
+ *   and collects all DOM references used across the module.
+ *
+ ** - Data loading
+ *   Fetches professor courses and lazily loads reports for a course (with in-memory caching).
+ *
+ ** - Page rendering
+ *   High-level rendering orchestration: stats + courses.
+ *   Computes counters (total/visible courses, selected course reports) and handles empty states.
+ *
+ ** - Courses rendering
+ *   Builds course cards from templates, fills main fields (name/cfu/semester/professor/majors),
+ *   syncs selection/open states, and prepares each card dataset for search/sort.
+ *
+ ** - Courses search + sort
+ *   Uses the shared courseSearchSort utilities to filter and sort course cards.
+ *   Updates UI counters (visible/total) and toggles “no results” visibility.
+ *
+ ** - Course interactions
+ *   Handles “Show reports / Close” actions per course, manages selection focus,
+ *   URL updates + scroll, and keeps the card UI in sync with the state.
+ *
+ ** - Reports panel rendering
+ *   Renders the reports list for the selected course (or the empty message),
+ *   builds report rows from template and sets navigation links.
+ *
+ ** - Query handling
+ *   Reads courseId/reportId from the router query and opens or redirects accordingly
+ *   (supports deep-links to a specific report and auto-open of a course).
+ *
+ ** - Errors
+ *   Centralized error display/hide logic for page-level failures.
+ *
+ ** - Small utilities
+ *   Formatting helpers (role label, professor name, report line) and safe numeric parsing.
+ */
+
 // -----------------------------
 // Entry point
 // -----------------------------
@@ -25,6 +78,8 @@ export async function renderReports({ root = document.getElementById("app"), que
     await loadCourses(state);
     renderPage(state);
 
+    bindReportsCourseSearchAndSort(state);
+
     await openFromQueryIfPresent(state);
 }
 
@@ -42,6 +97,7 @@ function createState({ user, ui, query }) {
         reportsByCourseId: new Map(),
         openCourseIds: new Set(),
         selectedCourseId: null,
+        visibleCourses: null,
     };
 }
 
@@ -63,6 +119,9 @@ function getUi() {
 
         courseCardTpl: document.getElementById("courseCardTpl"),
         reportItemTpl: document.getElementById("reportItemTpl"),
+
+        courseSearch: document.getElementById("courseSearch"),
+        courseSort: document.getElementById("courseSort"),
     };
 }
 
@@ -105,16 +164,18 @@ function renderPage(state) {
 
 function renderStats(state) {
     const totalCourses = state.courses.length;
+    const visibleCourses = state.visibleCourses ?? totalCourses;
     const selectedReports = getSelectedReportsCount(state);
 
-    state.ui.heroRoleText.textContent = buildHeroRoleText(state.user);
+    setText(state.ui.heroRoleText, buildHeroRoleText(state.user));
 
-    state.ui.totalCoursesBadge.textContent = String(totalCourses);
-    state.ui.coursesPill.textContent = `Corsi: ${totalCourses}`;
-    state.ui.sideCoursesNum.textContent = String(totalCourses);
+    setText(state.ui.totalCoursesBadge, String(totalCourses));
+    
+    setText(state.ui.coursesPill, `Corsi: ${visibleCourses}/${totalCourses}`);
+    setText(state.ui.sideCoursesNum, String(visibleCourses));
 
-    state.ui.totalReportsBadge.textContent = String(selectedReports);
-    state.ui.sideReportsNum.textContent = String(selectedReports);
+    setText(state.ui.totalReportsBadge, String(selectedReports));
+    setText(state.ui.sideReportsNum, String(selectedReports));
 
     const empty = totalCourses === 0;
     state.ui.noCoursesNote.hidden = !empty;
@@ -146,6 +207,8 @@ function renderCourseCards(state) {
 
         syncCardSelectionState(state, card, Number(course.id));
         syncCardReportsState(state, card, Number(course.id));
+
+        setReportsCourseDataset(card, course);
     }
 }
 
@@ -155,13 +218,13 @@ function renderCourseCard(card, course) {
     card.id = `course-${courseId}`;
     card.dataset.courseId = String(courseId);
 
-    setText(card, "[data-course-name]", course.name || "—");
-    setText(card, "[data-course-cfu]", `${course.cfu ?? 0} CFU`);
-    setText(card, "[data-course-semester]", course.semester != null ? `${course.semester} SEMESTRE` : "—");
+    setTextIn(card, "[data-course-name]", course.name || "—");
+    setTextIn(card, "[data-course-cfu]", `${course.cfu ?? 0} CFU`);
+    setTextIn(card, "[data-course-semester]", course.semester != null ? `${course.semester} SEMESTRE` : "—");
 
     const prof = formatProfessor(course.professor);
-    setText(card, "[data-course-professor]", prof);
-    setText(card, "[data-details-professor]", prof);
+    setTextIn(card, "[data-course-professor]", prof);
+    setTextIn(card, "[data-details-professor]", prof);
 
     renderMajors(card, course.majors);
 }
@@ -186,9 +249,54 @@ function renderMajors(card, majors) {
         const level = m?.degreeLevel?.name || "—";
 
         const line = document.createElement("div");
-        line.textContent = `${name} · ${level}`;
+        setText(line, `${name} · ${level}`);
         box.appendChild(line);
     }
+}
+
+// -----------------------------
+// Courses search + sort
+// -----------------------------
+
+function setReportsCourseDataset(card, course) {
+    const professorName = formatProfessor(course.professor);
+
+    const majors = (course.majors || [])
+        .map(m => `${m?.name ?? ""} ${m?.degreeLevel?.name ?? ""}`.trim())
+        .join(" ");
+
+    setCourseCardDataset(card, {
+        name: course.name,
+        cfu: course.cfu,
+        professorText: professorName,
+        majorsText: majors,
+    });
+}
+
+function bindReportsCourseSearchAndSort(state) {
+    const container = state.ui.coursesGrid;
+    if (!container) return;
+
+    const cards = Array.from(container.querySelectorAll("[data-course-card]"));
+    if (cards.length === 0) return;
+
+    bindCourseSearchAndSort({
+        container,
+        cards,
+        searchInput: state.ui.courseSearch,
+        sortSelect: state.ui.courseSort,
+        defaultSort: "nameAsc",
+        onUpdate: ({ total, visible }) => {
+            state.visibleCourses = visible;
+
+            setText(state.ui.coursesPill, `Corsi: ${visible}/${total}`);
+            setText(state.ui.sideCoursesNum, String(visible));
+
+            const emptyVisible = visible === 0;
+            state.ui.noCoursesNote.hidden = !emptyVisible;
+            state.ui.coursesGrid.hidden = emptyVisible;
+        },
+    });
 }
 
 // -----------------------------
@@ -287,8 +395,8 @@ function syncCardReportsState(state, card, courseId) {
     const reports = state.reportsByCourseId.get(courseId) || [];
     const count = isOpen ? reports.length : 0;
 
-    setText(card, "[data-course-reports-count]", String(count));
-    setText(card, "[data-mini-pill]", String(count));
+    setTextIn(card, "[data-course-reports-count]", String(count));
+    setTextIn(card, "[data-mini-pill]", String(count));
 
     const btnClose = card.querySelector("[data-btn-close]");
     if (btnClose) btnClose.hidden = !isOpen;
@@ -329,9 +437,9 @@ function renderReportsPanel(card, reportItemTpl, courseId, reports) {
     for (const r of reports) {
         const item = cloneTemplateFirstChild(reportItemTpl);
 
-        setText(item, "[data-report-date]", formatReportLine(r?.exam?.date, r?.timestamp));
-        setText(item, "[data-report-time]", formatTime(r?.exam?.date));
-        setText(item, "[data-report-cta]", `Verbale #${r?.id ?? "—"}`);
+        setTextIn(item, "[data-report-date]", formatReportLine(r?.exam?.date, r?.timestamp));
+        setTextIn(item, "[data-report-time]", formatTime(r?.exam?.date));
+        setTextIn(item, "[data-report-cta]", `Verbale #${r?.id ?? "—"}`);
 
         setReportHref(item, courseId, r?.id);
 
@@ -384,26 +492,17 @@ async function openFromQueryIfPresent(state) {
 
 function showError(state, message) {
     state.ui.pageError.hidden = false;
-    state.ui.pageErrorText.textContent = message;
+    setText(state.ui.pageErrorText, message);
 }
 
 function hideError(state) {
     state.ui.pageError.hidden = true;
-    state.ui.pageErrorText.textContent = "";
+    setText(state.ui.pageErrorText, "");
 }
 
 // -----------------------------
 // Small utilities
 // -----------------------------
-
-function cloneTemplateFirstChild(templateEl) {
-    return templateEl.content.firstElementChild.cloneNode(true);
-}
-
-function setText(root, selector, value) {
-    const el = root.querySelector(selector);
-    if (el) el.textContent = String(value);
-}
 
 function buildHeroRoleText(user) {
     const role = user?.role ? String(user.role).trim() : "";
@@ -422,30 +521,6 @@ function formatReportLine(examDateIso, timestampIso) {
     const examPart = examDateIso ? `Appello del ${formatDate(examDateIso)}` : "Appello del —";
     const repPart = timestampIso ? `Verbale del ${formatDateTime(timestampIso)}` : "Verbale del —";
     return `${examPart} \\ ${repPart}`;
-}
-
-function formatDate(iso) {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return "—";
-    return new Intl.DateTimeFormat("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" }).format(d);
-}
-
-function formatTime(iso) {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return "—";
-    return new Intl.DateTimeFormat("it-IT", { hour: "2-digit", minute: "2-digit" }).format(d);
-}
-
-function formatDateTime(iso) {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return "—";
-    return new Intl.DateTimeFormat("it-IT", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-    }).format(d);
 }
 
 function toFiniteNumber(x) {

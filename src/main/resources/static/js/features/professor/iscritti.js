@@ -13,6 +13,67 @@ import {
 
 import { getAllValidResults } from "../../services/resultApi.js";
 
+import {
+    bindSortingHeaders,
+    sortBySpec,
+    createResultRankById,
+    createStatusRankByKey,
+    getResultRank,
+    getStatusRank,
+} from "../../utils/sortingTable.js";
+
+import {
+    normalize,
+    cloneTemplateFirstChild,
+    setText,
+    setTextIn
+} from "../../utils/domUtils.js";
+import { formatMajor } from "../../utils/formatters.js";
+
+/**
+ * ISCRITTI PAGE — file sections overview
+ *
+ ** - Entry point
+ *   Bootstraps the page: validates examId from query, mounts template + header,
+ *   initializes state, loads data, renders UI, and binds sorting + bulk/multi-insert actions.
+ *
+ ** - State + UI
+ *   Central page state (examId, current sort, edit row tracking, loaded data, sorting context,
+ *   multi-insert modal state) and a single place to collect all DOM element references.
+ *
+ ** - Load + render
+ *   Fetches registrations + valid results in parallel, builds sorting context, refreshes
+ *   multi-insert rows, and renders the page (or empty/error state).
+ *
+ ** - Sorting
+ *   Creates ranking maps for result/status ordering, binds sortable table headers,
+ *   and defines how each column value is extracted for sorting (including custom ranks).
+ *
+ ** - Rows rendering
+ *   Renders the main table rows, sets result/status datasets for sorting, and
+ *   conditionally renders the inline edit form row when a student is in edit mode.
+ *
+ ** - Mutations
+ *   Handles saving a single student’s result, updates the local registrations list,
+ *   refreshes multi-insert eligibility, and re-renders the table/UI.
+ *
+ ** - Bulk actions
+ *   Binds “Publish” and “Finalize” actions: publishes results and reloads,
+ *   or finalizes and navigates to the generated report.
+ *
+ ** - Multi insert
+ *   Manages the modal for batch inserting results: open/close behavior, rendering the modal table,
+ *   tracking selected values, enabling/disabling the send button, submitting the payload,
+ *   and syncing the main table after successful updates.
+ *
+ ** - Business rules (front)
+ *   UI-side rules that gate editing (e.g., editable only when status is “non inserito” or “inserito”).
+ *
+ ** - Small utilities
+ *   Helpers for formatting the major string, generic error handling, and small UI builders (buttons).
+ */
+
+
 // -----------------------------
 // Entry point
 // -----------------------------
@@ -129,7 +190,7 @@ async function loadAndRender(state) {
 function renderPage(state) {
     const regs = state.data.registrations;
 
-    state.ui.totalPill.textContent = `Totali: ${regs.length}`;
+    setText(state.ui.totalPill, `Totali: ${regs.length}`);
     state.ui.bulkActions.hidden = regs.length === 0;
 
     if (regs.length === 0) {
@@ -141,7 +202,6 @@ function renderPage(state) {
     state.ui.tableWrap.hidden = false;
 
     renderTable(state);
-    renderSortIndicators(state);
 
     updateMultiButtonState(state);
 }
@@ -150,7 +210,7 @@ function renderEmpty(state) {
     state.ui.tableWrap.hidden = true;
     state.ui.emptyNote.hidden = false;
     state.ui.bulkActions.hidden = true;
-    state.ui.totalPill.textContent = "Totali: 0";
+    setText(state.ui.totalPill, "Totali: 0");
 
     updateMultiButtonState(state);
 }
@@ -170,157 +230,69 @@ function renderTable(state) {
 }
 
 // -----------------------------
-// Sorting (SPEC)
+// Sorting
 // -----------------------------
 
+function createSortingContext(validResults) {
+    return {
+        resultRankById: createResultRankById(validResults),
+        statusRankByKey: createStatusRankByKey(),
+    };
+}
+
 function bindSorting(state) {
-    const headers = document.querySelectorAll("th.is-sortable");
-
-    headers.forEach((th) => {
-        const key = th.dataset.sortKey;
-        const btn = th.querySelector("button.th-link");
-        if (!btn || !key) return;
-
-        btn.addEventListener("click", () => {
-            toggleSort(state, key);
+    bindSortingHeaders({
+        root: document,
+        sort: state.sort,
+        onChange: () => {
             renderTable(state);
-            renderSortIndicators(state);
-        });
+        },
     });
 }
 
-function toggleSort(state, key) {
-    if (state.sort.key === key) {
-        state.sort.dir = state.sort.dir === "asc" ? "desc" : "asc";
-        return;
-    }
-    state.sort.key = key;
-    state.sort.dir = "asc";
-}
-
-function renderSortIndicators(state) {
-    const headers = document.querySelectorAll("th.is-sortable");
-
-    headers.forEach((th) => {
-        const key = th.dataset.sortKey;
-        const ico = th.querySelector(".sort-ico");
-
-        th.classList.remove("is-active");
-        ico?.classList.remove("asc", "desc");
-
-        if (key !== state.sort.key) return;
-
-        th.classList.add("is-active");
-        ico?.classList.add(state.sort.dir === "asc" ? "asc" : "desc");
-    });
-}
-
-function sortRegistrations(registrations, sort, sorting) {
-    const dir = sort.dir === "desc" ? -1 : 1;
-
-    return [...registrations].sort((a, b) => {
-        const va = getSortValue(a, sort.key, sorting);
-        const vb = getSortValue(b, sort.key, sorting);
-
-        const cmp = compareValues(va, vb) * dir;
-        if (cmp !== 0) return cmp;
-
-        const na = Number(a?.student?.number) || 0;
-        const nb = Number(b?.student?.number) || 0;
-        return na - nb;
-    });
-}
-
-function getSortValue(r, key, sorting) {
+function getSortValueIscritti(r, key, sorting) {
     if (key === "student.number") return Number(r?.student?.number) || 0;
     if (key === "student.surname") return r?.student?.surname || "";
     if (key === "student.name") return r?.student?.name || "";
     if (key === "student.email") return r?.student?.email || "";
     if (key === "student.major") return formatMajor(r?.student?.major);
 
-    if (key === "result") return getResultRank(r?.result, sorting);
-    if (key === "status") return getStatusRank(r?.status, sorting);
+    if (key === "result") return getResultRank(r?.result, sorting.resultRankById, normalize);
+    if (key === "status") return getStatusRank(r?.status, sorting.statusRankByKey, normalize);
 
     return "";
 }
 
-function compareValues(a, b) {
-    if (typeof a === "number" && typeof b === "number") return a - b;
-    return String(a).localeCompare(String(b), "it", { sensitivity: "base" });
+function sortRegistrations(registrations, sort, sorting) {
+    return sortBySpec(
+        registrations,
+        sort,
+        (r, key) => getSortValueIscritti(r, key, sorting),
+        (a, b) => (Number(a?.student?.number) || 0) - (Number(b?.student?.number) || 0)
+    );
 }
 
 // -----------------------------
-// SPEC ranking: Result + Status
-// -----------------------------
-
-function createSortingContext(validResults) {
-    return {
-        resultRankById: buildResultRankById(validResults),
-        statusRankByKey: buildStatusRankByKey(),
-    };
-}
-
-function buildResultRankById(results) {
-    const map = new Map();
-    let rank = 1;
-
-    for (const res of results || []) {
-        if (res?.id == null) continue;
-        map.set(Number(res.id), rank++);
-    }
-    return map;
-}
-
-function buildStatusRankByKey() {
-    const order = ["non inserito", "inserito", "pubblicato", "rifiutato", "verbalizzato"];
-    const map = new Map();
-    order.forEach((s, idx) => map.set(s, idx));
-    return map;
-}
-
-function getResultRank(result, sorting) {
-    if (!result) return 0;
-
-    const rawValue = String(result.value || "").trim();
-    const isEmptyValue = rawValue.length === 0 || normalize(rawValue) === "<vuoto>";
-    if (isEmptyValue) return 0;
-
-    const id = result.id != null ? Number(result.id) : null;
-    if (id == null) return Number.MAX_SAFE_INTEGER;
-
-    const rank = sorting.resultRankById.get(id);
-    return rank != null ? rank : Number.MAX_SAFE_INTEGER;
-}
-
-function getStatusRank(status, sorting) {
-    const key = normalize(status || "");
-    if (!key) return Number.MAX_SAFE_INTEGER;
-
-    const rank = sorting.statusRankByKey.get(key);
-    return rank != null ? rank : Number.MAX_SAFE_INTEGER;
-}
-
-// -----------------------------
-// Rows rendering (main table)
+// Rows rendering
 // -----------------------------
 
 function renderRegistrationRow(state, r) {
-    const row = cloneTemplate(state.ui.rowTpl);
+    const row = cloneTemplateFirstChild(state.ui.rowTpl);
 
-    row.querySelector(".reg-student-number").textContent = r.student.number;
-    row.querySelector(".reg-student-surname").textContent = r.student.surname;
-    row.querySelector(".reg-student-name").textContent = r.student.name;
-    row.querySelector(".reg-student-email").textContent = r.student.email;
-    row.querySelector(".reg-student-major").textContent = r.student.major ? formatMajor(r.student.major) : "—";
+    setTextIn(row, ".reg-student-number", r.student.number);
+    setTextIn(row, ".reg-student-surname", r.student.surname);
+    setTextIn(row, ".reg-student-name", r.student.name);
+    setTextIn(row, ".reg-student-email", r.student.email);
+    setTextIn(row, ".reg-student-major", r.student.major ? formatMajor(r.student.major) : "—");
 
     const resultValue = String(r.result?.value || "").trim();
     const resultEl = row.querySelector(".reg-result");
-    resultEl.textContent = resultValue ? r.result.value : "—";
+    setText(resultEl, resultValue ? r.result.value : "—");
     resultEl.dataset.result = normalize(resultValue);
     resultEl.classList.toggle("is-empty", !resultValue);
 
     const statusEl = row.querySelector(".reg-status");
-    statusEl.textContent = r.status || "—";
+    setText(statusEl, r.status || "—");
     statusEl.dataset.status = normalize(r.status || "");
 
     renderRowActions(state, row.querySelector(".reg-actions"), r);
@@ -347,7 +319,7 @@ function renderRowActions(state, actionsEl, r) {
     if (!editable) {
         const muted = document.createElement("span");
         muted.className = "muted";
-        muted.textContent = "—";
+        setText(muted, "—");
         actionsEl.appendChild(muted);
         return;
     }
@@ -362,15 +334,14 @@ function renderRowActions(state, actionsEl, r) {
 }
 
 function renderEditRow(state, r) {
-    const row = cloneTemplate(state.ui.editTpl);
+    const row = cloneTemplateFirstChild(state.ui.editTpl);
 
-    row.querySelector("[data-edit-sub]").textContent =
-        `${r.student.number} · ${r.student.surname} ${r.student.name} · ${r.student.email}`;
+    setTextIn(row, "[data-edit-sub]", `${r.student.number} · ${r.student.surname} ${r.student.name} · ${r.student.email}`);
 
-    row.querySelector("[data-edit-name]").textContent = r.student.name;
-    row.querySelector("[data-edit-surname]").textContent = r.student.surname;
-    row.querySelector("[data-edit-email]").textContent = r.student.email;
-    row.querySelector("[data-edit-major]").textContent = formatMajorFull(r.student.major);
+    setTextIn(row, "[data-edit-name]", r.student.name);
+    setTextIn(row, "[data-edit-surname]", r.student.surname);
+    setTextIn(row, "[data-edit-email]", r.student.email);
+    setTextIn(row, "[data-edit-major]", formatMajorFull(r.student.major));
 
     const select = row.querySelector("[data-edit-select]");
     fillResultsSelect(select, state.data.results, r.result?.id);
@@ -393,14 +364,15 @@ function fillResultsSelect(select, results, selectedId) {
     for (const res of results || []) {
         const opt = document.createElement("option");
         opt.value = String(res.id);
-        opt.textContent = res.value;
+        setText(opt, res.value);
+
         if (selectedId != null && res.id === selectedId) opt.selected = true;
         select.appendChild(opt);
     }
 }
 
 // -----------------------------
-// Mutations (single row)
+// Mutations
 // -----------------------------
 
 async function onSaveResult(state, registrationId, resultId) {
@@ -417,7 +389,6 @@ async function onSaveResult(state, registrationId, resultId) {
         refreshMultiRows(state);
 
         renderTable(state);
-        renderSortIndicators(state);
         updateMultiButtonState(state);
     } catch (err) {
         showError(state, err?.message || "Errore durante il salvataggio");
@@ -425,7 +396,7 @@ async function onSaveResult(state, registrationId, resultId) {
 }
 
 // -----------------------------
-// Bulk actions (publish/finalize)
+// Bulk actions
 // -----------------------------
 
 function bindBulkActions(state) {
@@ -451,7 +422,7 @@ function bindBulkActions(state) {
 }
 
 // -----------------------------
-// Multi insert (MODAL + BULK PATCH)
+// Multi insert
 // -----------------------------
 
 function bindMultiInsert(state) {
@@ -518,7 +489,7 @@ function closeMultiModal(state) {
 function renderMultiModal(state) {
     const rows = state.multi.rows;
 
-    state.ui.multiRowsPill.textContent = `Righe: ${rows.length}`;
+    setText(state.ui.multiRowsPill, `Righe: ${rows.length}`);
 
     if (rows.length === 0) {
         state.ui.multiEmpty.hidden = false;
@@ -536,13 +507,13 @@ function renderMultiModal(state) {
     state.ui.multiTbody.innerHTML = "";
 
     for (const r of sorted) {
-        const tr = cloneTemplate(state.ui.multiRowTpl);
+        const tr = cloneTemplateFirstChild(state.ui.multiRowTpl);
 
-        tr.querySelector(".mm-number").textContent = r.student.number;
-        tr.querySelector(".mm-surname").textContent = r.student.surname || "—";
-        tr.querySelector(".mm-name").textContent = r.student.name || "—";
-        tr.querySelector(".mm-email").textContent = r.student.email || "—";
-        tr.querySelector(".mm-major").textContent = r.student.major ? formatMajor(r.student.major) : "—";
+        setTextIn(tr, ".mm-number", r.student.number);
+        setTextIn(tr, ".mm-surname", r.student.surname || "—");
+        setTextIn(tr, ".mm-name", r.student.name || "—");
+        setTextIn(tr, ".mm-email", r.student.email || "—");
+        setTextIn(tr, ".mm-major", r.student.major ? formatMajor(r.student.major) : "—");
 
         const cell = tr.querySelector(".mm-vote");
         const sel = buildBulkSelect(state, r.id);
@@ -559,13 +530,13 @@ function buildBulkSelect(state, registrationId) {
 
     const opt0 = document.createElement("option");
     opt0.value = "";
-    opt0.textContent = "<vuoto>";
+    setText(opt0, "<vuoto>");
     sel.appendChild(opt0);
 
     for (const res of state.data.results || []) {
         const opt = document.createElement("option");
         opt.value = String(res.id);
-        opt.textContent = res.value;
+        setText(opt, res.value);
         sel.appendChild(opt);
     }
 
@@ -584,7 +555,7 @@ function updateMultiSendButtonState(state) {
     const count = countValidMultiSelections(state);
 
     btn.disabled = state.multi.sending;
-    btn.textContent = state.multi.sending ? "Invio..." : "Invia";
+    setText(btn, state.multi.sending ? "Invio..." : "Invia");
     btn.title = count === 0 ? "Seleziona almeno un voto valido" : "";
 }
 
@@ -638,7 +609,6 @@ async function submitMulti(state) {
         refreshMultiRows(state);
 
         renderPage(state);
-        renderSortIndicators(state);
         updateMultiButtonState(state);
     } catch (err) {
         state.multi.sending = false;
@@ -665,12 +635,12 @@ function getNonInseritoRows(registrations) {
 
 function showMultiError(state, message) {
     state.ui.multiError.hidden = false;
-    state.ui.multiErrorText.textContent = message;
+    setText(state.ui.multiErrorText, message);
 }
 
 function hideMultiError(state) {
     state.ui.multiError.hidden = true;
-    state.ui.multiErrorText.textContent = "";
+    setText(state.ui.multiErrorText, "");
 }
 
 // -----------------------------
@@ -686,44 +656,28 @@ function canEditRegistration(r) {
 // Small utilities
 // -----------------------------
 
-function cloneTemplate(tpl) {
-    return tpl.content.firstElementChild.cloneNode(true);
-}
-
-function normalize(s) {
-    return String(s || "").toLowerCase().trim();
-}
-
-function formatMajor(major) {
-    if (!major) return "";
-    const name = major.name || "";
-    const level = major.degreeLevel?.name || "";
-    return `${name} · ${level}`.trim();
-}
-
 function formatMajorFull(major) {
     if (!major) return "—";
-    const name = major.name || "—";
-    const level = major.degreeLevel?.name || "—";
+    const base = formatMajor(major) || "—";
     const years = major.degreeLevel?.yearsOfStudy;
-    return years ? `${name} · ${level} (${years} anni)` : `${name} · ${level}`;
+    return years ? `${base} (${years} anni)` : base;
 }
 
 function showError(state, message) {
     state.ui.pageError.hidden = false;
-    state.ui.pageErrorText.textContent = message;
+    setText(state.ui.pageErrorText, message);
 }
 
 function hideError(state) {
     state.ui.pageError.hidden = true;
-    state.ui.pageErrorText.textContent = "";
+    setText(state.ui.pageErrorText, "");
 }
 
 function buildButton(text, className, onClick) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = className;
-    btn.textContent = text;
+    setText(btn, text);
     btn.addEventListener("click", onClick);
     return btn;
 }

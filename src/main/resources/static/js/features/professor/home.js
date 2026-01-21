@@ -10,7 +10,52 @@ import { templateFetch } from "../../common/template.js";
 import { renderHeader } from "../../common/header.js";
 
 import { Role } from "../../utils/Role.js";
-import { escapeHtml, formatDateIT, formatTimeIT } from "../../utils/utils.js";
+import { setCourseCardDataset, bindCourseSearchAndSort } from "../../utils/courseSearchSort.js";
+import { cloneTemplateFirstChild, setTextIn } from "../../utils/domUtils.js";
+import { formatDate, formatTime } from "../../utils/formatters.js";
+import { escapeHtml } from "../../utils/utils.js";
+
+/**
+ * HOME PAGE — file sections overview
+ *
+ ** - Entry point
+ *   Public `renderHome()` function:
+ *   mounts the template, renders the header, loads courses (based on user role),
+ *   renders stats + course cards, then enables search/sort.
+ *
+ ** - Mounting
+ *   Injects the Home HTML template into the given root element (templateFetch).
+ *
+ ** - Data loading
+ *   Fetches the course list from the backend depending on the role
+ *
+ ** - Stats rendering
+ *   Computes and updates page statistics (total courses, total CFU),
+ *   and toggles the empty-state note if needed.
+ *
+ ** - Courses rendering
+ *   Creates and fills course cards from the template, renders majors,
+ *   and sets searchable/sortable dataset fields on each card.
+ *
+ ** - Courses search + sort
+ *   Binds the shared search/sort utility (`bindCourseSearchAndSort`) to
+ *   the Home UI (input/select) and updates the “visible courses” pill.
+ *
+ ** - Course interactions
+ *   Handles user interactions on a course card (open exams button, selection,
+ *   URL update, scrolling/focus).
+ *
+ ** - Exams rendering
+ *   Loads and renders the exam panel for a course (show/hide),
+ *   including registered state resolution for students.
+ *
+ ** - Exam actions
+ *   Renders student-only actions (register button / “registered” badge)
+ *   and performs the registration call.
+ *
+ ** - Small utilities
+ *   Role checks and small helper functions used across the file.
+ */
 
 // -----------------------------
 // Entry point
@@ -26,7 +71,7 @@ export async function renderHome({ root = document.getElementById("app") } = {})
 
     renderHomeStats(courses);
     renderCourseCards(courses, user.role);
-    bindCourseSearchAndSort();
+    bindHomeCourseSearchAndSort();
 }
 
 // -----------------------------
@@ -66,12 +111,12 @@ function computeCourseTotals(courses) {
 }
 
 function updateStatsText({ totalCourses, totalCfu }) {
-    setText("statTotalCourses", totalCourses);
-    setText("pillTotalCourses", `Totali: ${totalCourses}`);
-    setText("sideTotalCourses", totalCourses);
+    setTextIn(document, "#statTotalCourses", totalCourses);
+    setTextIn(document, "#pillTotalCourses", `Totali: ${totalCourses}`);
+    setTextIn(document, "#sideTotalCourses", totalCourses);
 
-    setText("statTotalCfu", totalCfu);
-    setText("sideTotalCfu", totalCfu);
+    setTextIn(document, "#statTotalCfu", totalCfu);
+    setTextIn(document, "#sideTotalCfu", totalCfu);
 }
 
 function updateEmptyCoursesNote(totalCourses) {
@@ -98,7 +143,6 @@ function renderCourseCards(courses, role) {
 }
 
 function getCoursesContainer() {
-    // Support both SPA + old MVC ids (whichever is in the template)
     return document.getElementById("coursesGrid")
         || document.getElementById("courses");
 }
@@ -108,7 +152,18 @@ function renderCourseCard(card, course) {
 
     renderCourseMainFields(card, course);
     renderCourseSecondaryFields(card, course);
-    updateCourseSearchDataset(card, course);
+
+    const professorName = formatProfessorName(course.professor);
+    const majors = (course.majors || [])
+        .map(m => `${m?.name ?? ""} ${m?.degreeLevel?.name ?? ""}`.trim())
+        .join(" ");
+
+    setCourseCardDataset(card, {
+        name: course.name,
+        cfu: course.cfu,
+        professorText: professorName,
+        majorsText: majors,
+    });
 }
 
 function renderCourseMainFields(card, course) {
@@ -130,7 +185,11 @@ function renderCourseSecondaryFields(card, course) {
 }
 
 function formatProfessorName(professor) {
-    return `${professor.name} ${professor.surname}`;
+    if (!professor) return "—";
+    const name = professor.name || "";
+    const surname = professor.surname || "";
+    const full = `${name} ${surname}`.trim();
+    return full.length ? full : "—";
 }
 
 function renderCourseMajors(card, course) {
@@ -149,100 +208,28 @@ function buildMajorLine(major) {
     return `<div><span>${name}</span> · <span>${level}</span></div>`;
 }
 
-function updateCourseSearchDataset(card, course) {
-    const professorName = formatProfessorName(course.professor);
-    const majorsText = buildMajorsSearchText(course.majors);
-
-    card.dataset.name = normalize(course.name);
-    card.dataset.cfu = String(course.cfu ?? 0);
-    card.dataset.prof = normalize(professorName);
-    card.dataset.major = normalize(majorsText);
-}
-
-function buildMajorsSearchText(majors) {
-    return (majors || [])
-        .map(m => `${m?.name ?? ""} ${m?.degreeLevel?.name ?? ""}`.trim())
-        .join(" ");
-}
-
 // -----------------------------
 // Courses search + sort
 // -----------------------------
 
-function bindCourseSearchAndSort() {
+function bindHomeCourseSearchAndSort() {
     const container = getCoursesContainer();
     if (!container) return;
 
     const cards = Array.from(container.querySelectorAll(".course-card"));
     if (cards.length === 0) return;
 
-    const searchInput = document.getElementById("courseSearch");
-    const sortSelect = document.getElementById("courseSort");
-    const pill = document.getElementById("visibleCountPill");
-
-    const ui = {
+    bindCourseSearchAndSort({
         container,
         cards,
-        searchInput,
-        sortSelect,
-        pill,
-    };
-
-    const apply = () => applyCourseFilterAndSort(ui);
-
-    if (searchInput) searchInput.addEventListener("input", apply);
-    if (sortSelect) sortSelect.addEventListener("change", apply);
-
-    apply();
-}
-
-function applyCourseFilterAndSort(ui) {
-    filterCourses(ui);
-    sortVisibleCourses(ui);
-    updateVisibleCountPill(ui);
-}
-
-function filterCourses({ cards, searchInput }) {
-    const query = normalize(searchInput ? searchInput.value : "");
-
-    for (const card of cards) {
-        const haystack = [
-            card.dataset.name,
-            card.dataset.major,
-            card.dataset.prof,
-        ].join(" ");
-
-        card.style.display = haystack.includes(query) ? "" : "none";
-    }
-}
-
-function sortVisibleCourses({ container, cards, sortSelect }) {
-    const mode = sortSelect ? sortSelect.value : "nameDesc";
-
-    const visible = cards.filter(c => c.style.display !== "none");
-
-    visible.sort((a, b) => compareCourseCards(a, b, mode));
-    visible.forEach(el => container.appendChild(el));
-}
-
-function compareCourseCards(a, b, mode) {
-    const an = a.dataset.name || "";
-    const bn = b.dataset.name || "";
-    const ac = parseInt(a.dataset.cfu || "0", 10);
-    const bc = parseInt(b.dataset.cfu || "0", 10);
-
-    if (mode === "nameAsc") return an.localeCompare(bn);
-    if (mode === "nameDesc") return bn.localeCompare(an);
-    if (mode === "cfuAsc") return ac - bc;
-    if (mode === "cfuDesc") return bc - ac;
-
-    return 0;
-}
-
-function updateVisibleCountPill({ cards, pill }) {
-    if (!pill) return;
-    const count = cards.filter(c => c.style.display !== "none").length;
-    pill.textContent = `Visibili: ${count}`;
+        searchInput: document.getElementById("courseSearch"),
+        sortSelect: document.getElementById("courseSort"),
+        defaultSort: "nameDesc",
+        onUpdate: ({ visible }) => {
+            const pill = document.getElementById("visibleCountPill");
+            if (pill) pill.textContent = `Visibili: ${visible}`;
+        },
+    });
 }
 
 // -----------------------------
@@ -348,8 +335,8 @@ function renderExamRow(row, exam, role, courseId, registeredExamIds) {
 }
 
 function renderExamDateTime(row, date) {
-    row.querySelector(".exam-date").textContent = formatDateIT(date);
-    row.querySelector(".exam-time").textContent = formatTimeIT(date);
+    row.querySelector(".exam-date").textContent = formatDate(date);
+    row.querySelector(".exam-time").textContent = formatTime(date);
 }
 
 function renderExamLink(row, examId, role) {
@@ -417,19 +404,6 @@ function resetRegisterButton(button) {
 // -----------------------------
 // Small utilities
 // -----------------------------
-
-function setText(id, value) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = String(value);
-}
-
-function cloneTemplateFirstChild(templateEl) {
-    return templateEl.content.firstElementChild.cloneNode(true);
-}
-
-function normalize(value) {
-    return String(value ?? "").toLowerCase().trim();
-}
 
 function isProfessor(role) {
     return role === Role.PROFESSOR || role === "PROFESSOR";
