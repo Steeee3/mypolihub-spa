@@ -11,6 +11,10 @@ public class AppController {
 
     @GetMapping({"/app", "/", "/home"})
     public String initRoute(Authentication auth) {
+        if (auth == null || !auth.isAuthenticated()) {
+            return "redirect:/login";
+        }
+
         Role role = Role.from(auth);
 
         switch (role) {
