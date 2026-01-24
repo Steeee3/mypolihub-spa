@@ -11,12 +11,28 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/", "/login", "/css/**", "/js/**", "/img/**").permitAll()
-            .requestMatchers("/student/**").hasAnyRole("STUDENT", "ADMIN")
-            .requestMatchers("/api/student/**").hasAnyRole("STUDENT", "ADMIN")
-            .requestMatchers("/professor/**").hasAnyRole("PROFESSOR", "ADMIN")
-            .requestMatchers("/api/professor/**").hasAnyRole("PROFESSOR", "ADMIN")
+            .requestMatchers("/login", "/css/**", "/js/**", "/img/**").permitAll()
+            
+            //SPA entrypoints
+            .requestMatchers("/professor.html", "/app/professor/**").hasAnyRole("PROFESSOR", "ADMIN")
+            .requestMatchers("/student.html", "/app/student/**").hasAnyRole("STUDENT", "ADMIN")
+
+            //MVC entrypoints
             .requestMatchers("/admin/**").hasRole("ADMIN")
+
+            //API: common
+            .requestMatchers("/api/csrf").authenticated()
+            .requestMatchers("/api/me").authenticated()
+            .requestMatchers("/api/exams/**").authenticated()
+            .requestMatchers("/api/results/valid-only").authenticated()
+
+            //API: role based
+            .requestMatchers("/api/professor/**").hasAnyRole("PROFESSOR", "ADMIN")
+            .requestMatchers("/api/student/**").hasAnyRole("STUDENT", "ADMIN")
+
+            //killswitch
+            .requestMatchers("/api/**").denyAll()
+
             .anyRequest().authenticated()
         )
         .formLogin(form -> form

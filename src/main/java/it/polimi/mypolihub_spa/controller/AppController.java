@@ -1,5 +1,6 @@
 package it.polimi.mypolihub_spa.controller;
 
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,7 +12,7 @@ public class AppController {
 
     @GetMapping({"/app", "/", "/home"})
     public String initRoute(Authentication auth) {
-        if (auth == null || !auth.isAuthenticated()) {
+        if (auth == null || auth instanceof AnonymousAuthenticationToken) {
             return "redirect:/login";
         }
 
@@ -25,7 +26,7 @@ public class AppController {
             case ADMIN:
                 return "redirect:/admin/panel";
             default:
-                return "redirect:/";
+                return "redirect:/login";
         }
     }
 

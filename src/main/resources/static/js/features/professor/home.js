@@ -331,7 +331,7 @@ async function loadRegisteredExamIds(role, courseId) {
 function renderExamRow(row, exam, role, courseId, registeredExamIds) {
     renderExamDateTime(row, exam.date);
     renderExamLink(row, exam.id, role);
-    renderExamActions(row, { role, courseId, examId: exam.id, registeredExamIds });
+    renderExamActions(row, { role, courseId, examId: exam.id, examDate: exam.date, registeredExamIds });
 }
 
 function renderExamDateTime(row, date) {
@@ -361,6 +361,11 @@ function renderExamActions(row, ctx) {
 
     if (ctx.registeredExamIds.includes(ctx.examId)) {
         renderRegisteredBadge(actionsEl);
+        return;
+    }
+
+    if (!canRegisterToExam(ctx.examDate)) {
+        actionsEl.innerHTML = `<span class="pill">Iscrizioni chiuse</span>`;
         return;
     }
 
@@ -411,4 +416,10 @@ function isProfessor(role) {
 
 function isStudent(role) {
     return role === Role.STUDENT || role === "STUDENT";
+}
+
+function canRegisterToExam(examDateIso) {
+    const examTime = new Date(examDateIso).getTime();
+    const now = Date.now();
+    return examTime > now;
 }
