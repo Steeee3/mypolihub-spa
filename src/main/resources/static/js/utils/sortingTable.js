@@ -57,6 +57,8 @@ export function sortBySpec(list, sort, getValue, tieBreaker) {
         const va = getValue(a, sort.key);
         const vb = getValue(b, sort.key);
 
+        //< 0: a before b
+        //> 0: b before a
         const cmp = compareValues(va, vb) * dir;
         if (cmp !== 0) return cmp;
 
