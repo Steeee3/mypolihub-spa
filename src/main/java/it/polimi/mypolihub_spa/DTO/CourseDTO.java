@@ -16,6 +16,7 @@ public class CourseDTO {
     private String name;
     private Integer cfu;
     private Semester semester;
+    private String year;
     private ProfessorDTO professor;
     private Set<StudentDTO> students;
     private Map<MajorDTO, Integer> majorAndYear;
@@ -25,6 +26,7 @@ public class CourseDTO {
         name = course.getName();
         cfu = course.getCfu();
         semester = course.getSemester();
+        year = course.getYear();
 
         professor = new ProfessorDTO(course.getProfessor());
 
@@ -55,6 +57,10 @@ public class CourseDTO {
 
     public Semester getSemester() {
         return semester;
+    }
+
+    public String getYear() {
+        return year;
     }
 
     public ProfessorDTO getProfessor() {

@@ -38,6 +38,9 @@ public class Course {
     @Column(name = "cfu", nullable = false)
     private Integer cfu;
 
+    @Column(name = "year", nullable = false)
+    private String year;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "semester", nullable = false)
     private Semester semester;
@@ -71,6 +74,14 @@ public class Course {
 
     public void setCfu(Integer cfu) {
         this.cfu = cfu;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
     }
 
     public Semester getSemester() {

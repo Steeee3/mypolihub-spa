@@ -167,7 +167,7 @@ function renderCourseCard(card, course) {
 }
 
 function renderCourseMainFields(card, course) {
-    card.querySelector(".course-name").textContent = course.name;
+    card.querySelector(".course-name").textContent = `${course.name} [${course.year}]`;
     card.querySelector(".course-cfu").textContent = `${course.cfu} CFU`;
     card.querySelector(".course-semester").textContent = `${course.semester} SEMESTRE`;
 }
@@ -178,6 +178,7 @@ function renderCourseSecondaryFields(card, course) {
 
     card.querySelector(".course-prof").textContent = professorName;
     card.querySelector(".course-students").textContent = studentsCount;
+    card.querySelector(".course-year").textContent = course.year;
 
     card.querySelector(".course-prof-2").textContent = professorName;
     card.querySelector(".course-semester-2").textContent = course.semester;

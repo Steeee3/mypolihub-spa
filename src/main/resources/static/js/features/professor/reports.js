@@ -218,9 +218,10 @@ function renderCourseCard(card, course) {
     card.id = `course-${courseId}`;
     card.dataset.courseId = String(courseId);
 
-    setTextIn(card, "[data-course-name]", course.name || "—");
+    setTextIn(card, "[data-course-name]", `${course.name} [${course.year}]` || "—");
     setTextIn(card, "[data-course-cfu]", `${course.cfu ?? 0} CFU`);
     setTextIn(card, "[data-course-semester]", course.semester != null ? `${course.semester} SEMESTRE` : "—");
+    setTextIn(card, "[data-course-year]", course.year != null ? course.year : "—");
 
     const prof = formatProfessor(course.professor);
     setTextIn(card, "[data-course-professor]", prof);
